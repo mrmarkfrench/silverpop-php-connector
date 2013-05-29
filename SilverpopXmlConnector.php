@@ -242,7 +242,6 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 */
 	protected function checkResponse($xml) {
 		$response = new SimpleXmlElement($xml);
-		$nodes = array('Body', 'RESULT', 'SUCCESS');
 		if (!isset($response->Body)) {
 			throw new SilverpopConnectorException("No <Body> element on response: {$xml}");
 		} elseif (!isset($response->Body->RESULT)) {
