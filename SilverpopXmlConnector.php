@@ -199,8 +199,34 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * 	string content of no output path provided
 	 */
 	public function streamExportFile($filePath, $output=null) {
-		$urlParams = '?filePath='.urlencode($filePath);
-		return $this->get('StreamExportFile', $urlParams, $output);
+		$params = "<";
+
+		// Wrap the request XML in an "envelope" element
+		$postParams = http_build_query(array('filePath'=>$filePath));
+
+		$url = $this->baseUrl."/StreamExportFile;jsessionid={$this->sessionId}";
+		$url = str_replace('api.', '', $url);
+		$curlHeaders = array(
+				'Content-Type: application/x-www-form-urlencoded',
+				'Content-Length: '.strlen($postParams),
+				);
+
+		$ch = curl_init();
+		$curlParams = array(
+			CURLOPT_URL            => $url,
+			CURLOPT_FOLLOWLOCATION => 1,//true,
+			CURLOPT_POST           => 1,//true,
+			CURLOPT_CONNECTTIMEOUT => 10,
+			CURLOPT_MAXREDIRS      => 3,
+			CURLOPT_POSTFIELDS     => $postParams,
+			CURLOPT_RETURNTRANSFER => 1,//true,
+			CURLOPT_HTTPHEADER     => $curlHeaders,
+			);
+		curl_setopt_array($ch, $curlParams);
+
+		$result = curl_exec($ch);
+		curl_close($ch);
+		return $result;
 	}
 
 	/**
@@ -251,39 +277,6 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		} elseif (strtolower($response->Body->RESULT->SUCCESS) != 'true') {
 			throw new SilverpopConnectorException('Request failed: '.$response->Body->Fault->FaultString);
 		}
-		return $response;
-	}
-
-	/**
-	 * Perform an HTTP GET request.
-	 * 
-	 * @param string $url
-	 * @param string $urlParams
-	 * @param string $outputFile Filepath to write output. Output returned if null.
-	 * @param string $fileMode   File output mode (any mode argument accepted by fopen)
-	 * @return mixed Returns content if no output file is specified, boolean otherwise
-	 */
-	protected function get($url, $urlParams, $outputFile=null, $fileMode='w') {
-		$url = $this->baseUrl.$url.";jsessionid={$this->sessionId}";
-		if (!empty($urlParams)) {
-			$url .= "?{$urlParams}";
-		}
-
-		$ch = curl_init();
-		$curlParams = array(
-			CURLOPT_URL            => $url,
-			CURLOPT_FOLLOWLOCATION => 1,//true,
-			CURLOPT_CONNECTTIMEOUT => 10,
-			CURLOPT_MAXREDIRS      => 3,
-			);
-		if (!empty($outputFile)) {
-			$fh = fopen($outputFile, $fileMode);
-			$curlParams[CURLOPT_FILE] = $fh;
-		} else {
-			$curlParams[CURLOPT_RETURNTRANSFER] = 1;
-		}
-		$response = curl_exec($ch);
-		curl_close($ch);
 		return $response;
 	}
 
