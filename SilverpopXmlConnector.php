@@ -187,6 +187,10 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		return $modifiedRecipients;
 	}
 
+	public function setSessionId($sessionId) {
+		$this->sessionId = $sessionId;
+	}
+
 	/**
 	 * Stream an exported file back from Silverpop over HTTP. Will either
 	 * stream file content to the specified local filesystem path, or return
