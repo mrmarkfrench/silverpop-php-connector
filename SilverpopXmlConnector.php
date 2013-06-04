@@ -86,7 +86,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params = "<ExportList>
 	<LIST_ID>{$listId}</LIST_ID>
 	<EXPORT_TYPE>{$type}</EXPORT_TYPE>
-	<EXPORT_FORMAT>{$format}</EXPORT_FORMAT>\n";
+	<EXPORT_FORMAT>{$format}</EXPORT_FORMAT>
+	<ADD_TO_STORED_FILES/>\n";
 		if (!empty($startDate)) {
 			$params .= '	<DATE_START>'.date('m/d/Y H:i:s', $startDate)."</DATE_START>\n";
 		}
