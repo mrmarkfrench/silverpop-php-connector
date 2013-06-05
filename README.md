@@ -3,6 +3,11 @@ silverpop-php-connector
 
 A connector SDK library for applications integrating with Silverpop, including the Universal Behavior API.
 
+Latest Version
+--------------
+
+The latest version is 1.0.0, and can be found in the version_1 branch. If you'd prefer the latest ongoing development version, it's in the master branch.
+
 Quickstart
 ----------
 
