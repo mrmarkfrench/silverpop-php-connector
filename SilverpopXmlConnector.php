@@ -237,6 +237,40 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		return $modifiedRecipients;
 	}
 
+	/**
+	 * Delete a recpient from a database.
+	 * 
+	 * @param int    $listId    The ID of the DB/list to remove from
+	 * @param string $mail
+	 * @param array  $keyFields An associative array of ID fields to match
+	 * @return bool
+	 */
+	public function removeRecipient($listId, $email, $keyFields=array()) {
+		$listId = (int)$listId;
+
+		$params = "<RemoveRecipient>
+	<LIST_ID>{$listId}</LIST_ID>
+	<EMAIL>{$email}</EMAIL>\n";
+		foreach ($keyFields as $key => $value) {
+			$params .= "\t<COLUMN>\n";
+			$params .= "\t\t<NAME>{$key}</NAME>\n";
+			$params .= "\t\t<VALUE>{$value}</VALUE>\n";
+			$params .= "\t</COLUMN>\n";
+		}
+		$params .= "</RemoveRecipient>";
+		$params = new SimpleXmlElement($params);
+
+		$result = $this->post($params);
+		return true;
+	}
+
+	/**
+	 * Set the session ID used to authenticate connections. Use this method
+	 * to set a pre-existing session ID that has not yet expired, in order to
+	 * avoid re-authenticating.
+	 * 
+	 * @param string $sessionId
+	 */
 	public function setSessionId($sessionId) {
 		$this->sessionId = $sessionId;
 	}
