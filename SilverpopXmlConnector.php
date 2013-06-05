@@ -19,9 +19,59 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	protected $password  = null;
 	protected $sessionId = null;
 
+	// Contact creation source constants
+	const CREATED_FROM_DB_IMPORT   = 0;
+	const CREATED_FROM_MANUAL      = 1;
+	const CREATED_FROM_OPT_IN      = 2;
+	const CREATED_FROM_TRACKING_DB = 3;
+
 	///////////////////////////////////////////////////////////////////////////
 	// PUBLIC ////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Add a new contact to an existing database.
+	 * 
+	 * @param integer $listId
+	 * @param array   $fields
+	 * @param bool    $upsert Perform an update if contact already exists?
+	 * @param integer $createdFrom
+	 * @param array   $lists
+	 * @return int Returns the RecipientId of the new recipient
+	 * @throws SilverpopConnectorException
+	 */
+	public function addRecipient($listId, $fields, $upsert=false, $createdFrom=self::CREATED_FROM_MANUAL, $lists=array()) {
+		$listId      = (int)$listId;
+		$createdFrom = (int)$createdFrom;
+		if (!in_array($createdFrom, array(0,1,2,3))) {
+			throw new SilverpopConnectorException("Unrecognized contact createdFrom value: {$createdFrom}");
+		}
+		$updateIfFound = $upsert ? 'TRUE' : 'FALSE';
+		$lists = array_map("intval", $lists);
+
+		$params = "<AddRecipient>
+	<LIST_ID>{$listId}</LIST_ID>
+	<CREATED_FROM>{$createdFrom}</CREATED_FROM>
+	<UPDATE_IF_FOUND>{$updateIfFound}</UPDATE_IF_FOUND>\n";
+		if (count($lists)) {
+			$params .= "\t<CONTACT_LISTS>\n";
+			foreach($lists as $list) {
+				$params .= "\t\t<CONTACT_LIST_ID>{$list}</CONTACT_LIST_ID>\n";
+			}
+			$params .= "\t</CONTACT_LISTS>\n";
+		}
+
+		foreach ($fields as $key => $value) {
+			$params .= "\t<COLUMN>\n";
+			$params .= "\t\t<NAME>{$key}</NAME>\n";
+			$params .= "\t\t<VALUE>{$value}</VALUE>\n";
+			$params .= "\t</COLUMN>\n";
+		}
+		$params .= "</AddRecipient>";
+		$params = new SimpleXmlElement($params);
+		$result = $this->post($params);
+		return (int)$result->Body->RESULT->RecipientId;
+	}
 
 	/**
 	 * Performs Silverpop authentication using the supplied credentials,
