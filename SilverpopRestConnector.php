@@ -9,6 +9,7 @@ require_once __DIR__.'/SilverpopConnectorException.php';
 class SilverpopRestConnector extends SilverpopBaseConnector {
 	protected static $instance = null;
 
+	// Authentication data
 	protected $baseUrl      = null;
 	protected $clientId     = null;
 	protected $clientSecret = null;
@@ -107,6 +108,15 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 		var_dump($result);
 	}
 
+	/**
+	 * Get the currently set access token from the connector. If none exists,
+	 * an authentication request will be attempted on your behalf using cached
+	 * credentials. Will return either an access token or NULL, if none was
+	 * available and authentication failed (due to either bad or missing
+	 * cached credentials).
+	 * 
+	 * @return string
+	 */
 	public function getAccessToken() {
 		if (empty($this->accessToken)) {
 			try {
