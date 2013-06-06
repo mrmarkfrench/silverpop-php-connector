@@ -127,6 +127,17 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 		return (!empty($this->accessToken) && method_exists($this, $method));
 	}
 
+	/**
+	 * Set the access token used to authenticate connections. Use this method
+	 * to set a pre-existing access token that has not yet expired, in order to
+	 * avoid re-authenticating.
+	 * 
+	 * @param string $accessToken
+	 */
+	public function setAccessToken($accessToken) {
+		$this->accessToken = $accessToken;
+	}
+
 	//////////////////////////////////////////////////////////////////////////
 	// PROTECTED ////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////
