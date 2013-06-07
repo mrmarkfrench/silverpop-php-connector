@@ -105,7 +105,6 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 
 		$events = array('events'=>array($event));
 		$result = $this->post('rest/events/submission', $events);
-		var_dump($result);
 	}
 
 	/**

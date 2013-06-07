@@ -308,9 +308,14 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 			CURLOPT_CONNECTTIMEOUT => 10,
 			CURLOPT_MAXREDIRS      => 3,
 			CURLOPT_POSTFIELDS     => $postParams,
-			CURLOPT_RETURNTRANSFER => 1,//true,
 			CURLOPT_HTTPHEADER     => $curlHeaders,
 			);
+		if (empty($output)) {
+			$curlParams[CURLOPT_RETURNTRANSFER] = 1;
+		} else {
+			$fh = fopen($output, 'w');
+			$curlParams[CURLOPT_FILE] = $fh;
+		}
 		curl_setopt_array($ch, $curlParams);
 
 		$result = curl_exec($ch);

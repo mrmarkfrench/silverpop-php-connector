@@ -71,7 +71,7 @@ while ($done == false) {
 }
 
 echo "Streaming exported file...\n";
-$result = SilverpopConnector::getInstance()->streamExportFile($filePath, null);//'/tmp/SilverpopExportFile.csv');
+$result = SilverpopConnector::getInstance()->streamExportFile($filePath, null);
 echo " -- Parsing stream data...\n";
 $csvLines = explode("\n", trim($result));
 $header = str_getcsv(array_shift($csvLines));
