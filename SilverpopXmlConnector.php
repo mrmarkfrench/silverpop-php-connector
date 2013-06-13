@@ -169,6 +169,20 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	}
 
 	/**
+	 * Get metadata for the specified list.
+	 * 
+	 * @param int $listId
+	 * @return SimpleXmlElement
+	 */
+	public function getListMetaData($listId) {
+		$listId = (int)$listId;
+		$params = "<GetListMetaData>\n\t<LIST_ID>{$listId}</LIST_ID>\n</GetListMetaData>";
+		$params = new SimpleXmlElement($params);
+		$result = $this->post($params);
+		return $result->Body->RESULT;
+	}
+
+	/**
 	 * Get a set of lists (DBs, queries, and contact lists) defined for this
 	 * account.
 	 * 
