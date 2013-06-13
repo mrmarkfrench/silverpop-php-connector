@@ -25,6 +25,16 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	const CREATED_FROM_OPT_IN      = 2;
 	const CREATED_FROM_TRACKING_DB = 3;
 
+	// List export formatting constants
+	const EXPORT_FORMAT_CSV  = 'CSV';
+	const EXPORT_FORMAT_TAB  = 'TAB';
+	const EXPORT_FORMAT_PIPE = 'PIPE';
+	// List formatting filter constants
+	const EXPORT_TYPE_ALL           = 'ALL';
+	const EXPORT_TYPE_OPT_IN        = 'OPT_IN';
+	const EXPORT_TYPE_OPT_OUT       = 'OPT_OUT';
+	const EXPORT_TYPE_UNDELIVERABLE = 'UNDELIVERABLE';
+
 	///////////////////////////////////////////////////////////////////////////
 	// PUBLIC ////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////
@@ -121,17 +131,36 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * that can be queried to determine when the list is complete, and a file
 	 * path to retrieve it.
 	 * 
+	 * If a list of export columns is specified, only those columns will be
+	 * included in the result (see the getListMetaData() method to determine
+	 * which fields are available for your list). If no columns are specified,
+	 * by default all custom fields and all system fields (except RECIPIENT_ID)
+	 * will be included in the export.
+	 * 
 	 * @param int    $listId
 	 * @param int    $startDate A timestamp for date boundaries
 	 * @param int    $endDate   A timestamp for date boundaries
-	 * @param string $type      {ALL, OPT_IN, OPT_OUT, UNDELIVERABLE}
-	 * @param string $format    {CSV, TAB, PIPE}
+	 * @param string $type      One fo the EXPORT_TYPE_* constants
+	 * @param string $format    One of the EXPORT_FORMAT_* constants
+	 * @param array  $columns   A list of column names to export
 	 * @return array An array of ('jobId'=>[int],'filePath'=>[string])
 	 */
-	public function exportList($listId, $startDate=null, $endDate=null, $type='ALL', $format='CSV') {
+	public function exportList(
+		$listId,
+		$startDate = null,
+		$endDate   = null,
+		$type      = self::EXPORT_TYPE_ALL,
+		$format    = self::EXPORT_FORMAT_CSV,
+		$columns   = array()) {
+
 		$listId = (int)$listId;
 		$type   = urlencode(strtoupper($type));
 		$format = urlencode(strtoupper($format));
+
+		$columnsToIgnore = array(
+			'LIST_ID',
+			'MAILING_ID',
+			);
 
 		$params = "<ExportList>
 	<LIST_ID>{$listId}</LIST_ID>
@@ -143,6 +172,16 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		}
 		if (!empty($endDate)) {
 			$params .= '	<DATE_END>'.date('m/d/Y H:i:s', $endDate)."</DATE_END>\n";
+		}
+		if (count($columns)) {
+			$params .= "\t<EXPORT_COLUMNS>\n";
+			foreach ($columns as $column) {
+				if (in_array($column, $columnsToIgnore)) {
+					continue;
+				}
+				$params .= "\t\t<COLUMN>{$column}</COLUMN>\n";
+			}
+			$params .= "\t</EXPORT_COLUMNS>\n";
 		}
 		$params .= '</ExportList>';
 		$params = new SimpleXmlElement($params);

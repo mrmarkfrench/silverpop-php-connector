@@ -29,21 +29,36 @@ if (count($result)) {
 		if ($listMembers <= 1 || ($list->SIZE > 1 && $list->SIZE < $listMembers)) {
 			$listId      = (string)$list->ID;
 			$listMembers = (string)$list->SIZE;
+			$listName    = (string)$list->NAME;
 		}
 	}
 	if (empty($listMembers)) {
 		echo " -- No populated lists found!\n";
 		die("Exiting");
 	} else {
-		echo " -- Selected list {$listId}, with {$listMembers} members.\n";
+		echo " -- Selected list \"{$listName}\" ({$listId}), with {$listMembers} members.\n";
 	}
 } else {
 	echo " -- No lists found!\n";
 	die("Exiting");
 }
 
+echo "Retrieving list meta data...\n";
+$result = SilverpopConnector::getInstance()->getListMetaData($listId);
+$columns = array();
+foreach ($result->COLUMNS->COLUMN as $column) {
+	$columns[] = (string)$column->NAME;
+}
+echo ' -- Found '.count($columns)." columns.\n";
+
 echo "Exporting list {$listId}...\n";
-$result = SilverpopConnector::getInstance()->exportList($listId, 0, time());
+$result = SilverpopConnector::getInstance()->exportList(
+	$listId,
+	0,
+	time(),
+	'ALL',
+	'CSV',
+	$columns);
 $jobId    = $result['jobId'];
 $filePath = $result['filePath'];
 $filePath = str_replace('/download/', '', $filePath);
