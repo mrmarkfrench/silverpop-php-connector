@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__.'/SilverpopBaseConnector.php';
+require_once __DIR__.'/SilverpopRestConnector.php';
 require_once __DIR__.'/SilverpopConnectorException.php';
 
 /**
@@ -454,11 +455,18 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$envelopeXml .= "\n\t</Body>\n</Envelope>";
 		$xmlParams = http_build_query(array('xml'=>$envelopeXml));
 
-		$url = $this->baseUrl."/XMLAPI;jsessionid={$this->sessionId}";
 		$curlHeaders = array(
 				'Content-Type: application/x-www-form-urlencoded',
 				'Content-Length: '.strlen($xmlParams),
 				);
+		// Use an oAuth token if there is one
+		if ($accessToken = SilverpopRestConnector::getInstance()->getAccessToken()) {
+			$curlHeaders[] = "Authorization: Bearer {$accessToken}";
+			$url = $this->baseUrl.'/XMLAPI';
+		} else {
+			// No oAuth, use jsessionid to authenticate
+			$url = $this->baseUrl."/XMLAPI;jsessionid={$this->sessionId}";
+		}
 
 		$ch = curl_init();
 		$curlParams = array(
