@@ -72,7 +72,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	 * Create a Universal Behavior event.
 	 * 
 	 * @param int    $typeCode   The event type ID
-	 * @param string $timestamp  The time of the event (Use the date('c') format)
+	 * @param string $timestamp  The time of the event (Use the date('Y-m-d\TH:i:s.000P') format)
 	 * @param array  $attributes An array of event attributes
 	 * 
 	 * @throws InvalidArgumentException
@@ -83,7 +83,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 			throw new InvalidArgumentException("The provided event type code '{$typeCode}' is either missing or not a number.");
 		}
 		if (date('Y-m-d\TH:i:s.000P', strtotime($timestamp)) != $timestamp) {
-			throw new InvalidArgumentException("The provided timestamp '{$timestamp}' does not match the required format: ".date('c'));
+			throw new InvalidArgumentException("The provided timestamp '{$timestamp}' does not match the required format: ".date('Y-m-d\TH:i:s.000P'));
 		}
 		if (!is_array($attributes) || empty($attributes)) {
 			throw new InvalidArgumentException("The 'attributes' supplied for the event are either empty or not an array.");
@@ -105,6 +105,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 
 		$events = array('events'=>array($event));
 		$result = $this->post('rest/events/submission', $events);
+		return $result;
 	}
 
 	/**
