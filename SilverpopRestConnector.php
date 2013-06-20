@@ -169,13 +169,14 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 
 		$url = $this->baseUrl.$resource;
 		$ch = curl_init();
+		$params = json_encode($params);
 		$curlParams = array(
 			CURLOPT_URL            => $url,
 			CURLOPT_FOLLOWLOCATION => 1,//true,
 			CURLOPT_POST           => 1,//true,
 			CURLOPT_CONNECTTIMEOUT => 10,
 			CURLOPT_MAXREDIRS      => 3,
-			CURLOPT_POSTFIELDS     => json_encode($params),
+			CURLOPT_POSTFIELDS     => $params,
 			CURLOPT_RETURNTRANSFER => 1,//true,
 			CURLOPT_HTTPHEADER     => array(
 				'Content-Type: application/json',
