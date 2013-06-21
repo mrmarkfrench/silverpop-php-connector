@@ -347,12 +347,19 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		// Wrap the request XML in an "envelope" element
 		$postParams = http_build_query(array('filePath'=>$filePath));
 
-		$url = $this->baseUrl."/StreamExportFile;jsessionid={$this->sessionId}";
-		$url = str_replace('api.', '', $url);
 		$curlHeaders = array(
 				'Content-Type: application/x-www-form-urlencoded',
 				'Content-Length: '.strlen($postParams),
 				);
+		// Use an oAuth token if there is one
+		if ($accessToken = SilverpopRestConnector::getInstance()->getAccessToken()) {
+			$curlHeaders[] = "Authorization: Bearer {$accessToken}";
+			$url = $this->baseUrl.'/StreamExportFile';
+		} else {
+			// No oAuth, use jsessionid to authenticate
+			$url = $this->baseUrl."/StreamExportFile;jsessionid={$this->sessionId}";
+		}
+		$url = str_replace('api.', '', $url);
 
 		$ch = curl_init();
 		$curlParams = array(
