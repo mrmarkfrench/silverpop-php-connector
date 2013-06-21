@@ -154,6 +154,16 @@ class SilverpopConnector {
 			$this->password);
 	}
 
+	/**
+	 * Set the base URL for API access.
+	 * 
+	 * @param string $baseUrl
+	 */
+	public function setBaseUrl($baseUrl) {
+		$this->restConnector->setBaseUrl($baseUrl);
+		$this->xmlConnector->setBaseUrl($baseUrl);
+	}
+
 	//////////////////////////////////////////////////////////////////////////
 	// PROTECTED ////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////
