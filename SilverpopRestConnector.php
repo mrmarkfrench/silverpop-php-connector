@@ -167,7 +167,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 			$this->authenticate();
 		}
 
-		$url = $this->baseUrl.$resource;
+		$url = $this->baseUrl.'/'.$resource;
 		$ch = curl_init();
 		$params = json_encode($params);
 		$curlParams = array(
