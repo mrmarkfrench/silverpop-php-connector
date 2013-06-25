@@ -51,6 +51,15 @@ class SilverpopConnector {
 		$this->xmlConnector->setBaseUrl($this->baseUrl);
 	}
 
+	/**
+	 * Passthrough to shunt requests to the appropriate connector object.
+	 * If a matching method is available through the REST API, it will be
+	 * utilitzed. If not, the XML API will be attempted instead.
+	 * 
+	 * @param string $method
+	 * @param array  $args
+	 * @return mixed
+	 */
 	public function __call($method, $args) {
 		if (isset($this->restConnector)) {
 			if ($this->restConnector->methodAvailable($method)) {
