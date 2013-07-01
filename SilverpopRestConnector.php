@@ -10,11 +10,12 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	protected static $instance = null;
 
 	// Authentication data
-	protected $baseUrl      = null;
-	protected $clientId     = null;
-	protected $clientSecret = null;
-	protected $refreshToken = null;
-	protected $accessToken  = null;
+	protected $baseUrl            = null;
+	protected $clientId           = null;
+	protected $clientSecret       = null;
+	protected $refreshToken       = null;
+	protected $accessToken        = null;
+	protected $accessTokenExpires = null;
 
 	///////////////////////////////////////////////////////////////////////////
 	// PUBLIC ////////////////////////////////////////////////////////////////
@@ -43,10 +44,11 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 			'refresh_token' => $this->refreshToken,
 			);
 		
+		$url = $this->baseUrl.'/oauth/token';
 		$ch = curl_init();
 
 		$curlParams = array(
-			CURLOPT_URL            => 'https://pilot.silverpop.com/oauth/token',
+			CURLOPT_URL            => $url,
 			CURLOPT_FOLLOWLOCATION => 1,
 			CURLOPT_CONNECTTIMEOUT => 10,
 			CURLOPT_MAXREDIRS      => 3,
@@ -66,6 +68,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 		}
 
 		$this->accessToken = $result['access_token'];
+		$this->accessTokenExpires = time() + $result['expires_in'];
 	}
 
 	/**
@@ -110,20 +113,31 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 
 	/**
 	 * Get the currently set access token from the connector. If none exists,
-	 * an authentication request will be attempted on your behalf using cached
-	 * credentials. Will return either an access token or NULL, if none was
-	 * available and authentication failed (due to either bad or missing
-	 * cached credentials).
+	 * or the existing token has expired, an authentication request will be
+	 * attempted on your behalf using cached credentials. Will return either an
+	 * access token or NULL, if none was available and authentication failed
+	 * (due to either bad or missing cached credentials).
 	 * 
 	 * @return string
 	 */
 	public function getAccessToken() {
-		if (empty($this->accessToken)) {
+		if (empty($this->accessToken) || $this->tokenExpired()) {
 			try {
 				$this->authenticate();
 			} catch (SilverpopConnectorException $sce) {}
 		}
 		return $this->accessToken;
+	}
+
+	/**
+	 * Get the value of when the current access token will expire. If there is
+	 * no current access token, or if an expiry was never set for it, this
+	 * value will be NULL.
+	 * 
+	 * @return int Returns a UNIX timestamp
+	 */
+	public function getAccessTokenExpiry() {
+		return $this->accessTokenExpires;
 	}
 
 	/**
@@ -143,14 +157,51 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	 * avoid re-authenticating.
 	 * 
 	 * @param string $accessToken
+	 * @param int    $expiry      Timestamp for when the token expires
 	 */
-	public function setAccessToken($accessToken) {
-		$this->accessToken = $accessToken;
+	public function setAccessToken($accessToken, $expiry=null) {
+		if (!empty($expiry) && !is_int($expiry)) {
+			$expiry = strtotime($expiry);
+		}
+		$this->accessToken        = $accessToken;
+		$this->accessTokenExpires = $expiry;
+	}
+
+	/**
+	 * Sets the parameters to perform an authentication, but does not make the
+	 * request. Use this method to provide the necessary authentication
+	 * information if you are supplying a pre-existing access token and want to
+	 * make certain a new one can be generated if it expires.
+	 * 
+	 * @param string $clientId
+	 * @param string $clientSecret
+	 * @param string $refreshToken
+	 */
+	public function setAuthParams($clientId, $clientSecret, $refreshToken) {
+		$this->clientId     = $clientId;
+		$this->clientSecret = $clientSecret;
+		$this->refreshToken = $refreshToken;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	// PROTECTED ////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Is the current access token expired? If it is expired (or will expire
+	 * within the next 5 seconds), we should request a new token rather than
+	 * using the current one.
+	 * 
+	 * @return bool
+	 */
+	protected function tokenExpired() {
+		// If no expiry was specified, assume the token is still good
+		if (empty($this->accessTokenExpires)) {
+			return false;
+		}
+		// Allow a few seconds of buffer to account for communication delay.
+		return $this->accessTokenExpires <= (time()+5);
+	}
 
 	/**
 	 * Send a POST request to the API
@@ -162,9 +213,10 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	 * @throws SilverpopConnectorException
 	 */
 	protected function post($resource, $params=array()) {
-		// Attempt to authenticate using cached credentials if not connected
-		if (empty($this->accessToken)) {
-			$this->authenticate();
+		// Get the token, and attempt to re-authenticate if needed.
+		$accessToken = $this->getAccessToken();
+		if (empty($accessToken)) {
+			throw new SilverpopConnectorException('Unable to authenticate request.');
 		}
 
 		$url = $this->baseUrl.'/'.$resource;
@@ -181,7 +233,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 			CURLOPT_HTTPHEADER     => array(
 				'Content-Type: application/json',
 				'Content-Length: '.strlen($params),
-				"Authorization: Bearer {$this->accessToken}",
+				"Authorization: Bearer {$accessToken}",
 				),
 			);
 		curl_setopt_array($ch, $curlParams);
