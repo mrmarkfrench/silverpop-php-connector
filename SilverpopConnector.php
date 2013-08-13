@@ -44,11 +44,9 @@ class SilverpopConnector {
 	 * @return SilverpopConnector
 	 */
 	public function __construct($baseUrl='http://api.pilot.silverpop.com') {
-		$this->baseUrl = $baseUrl;
 		$this->restConnector = SilverpopRestConnector::getInstance();
-		$this->restConnector->setBaseUrl($this->baseUrl);
 		$this->xmlConnector  = SilverpopXmlConnector::getInstance();
-		$this->xmlConnector->setBaseUrl($this->baseUrl);
+		$this->setBaseUrl($baseUrl);
 	}
 
 	/**
@@ -169,6 +167,11 @@ class SilverpopConnector {
 	 * @param string $baseUrl
 	 */
 	public function setBaseUrl($baseUrl) {
+		// The URL needs a protocol, and SSL is preferred
+		if (substr($baseUrl, 0, 4) != 'http') {
+			$baseUrl = "https://{$baseUrl}";
+		}
+		$this->baseUrl = $baseUrl;
 		$this->restConnector->setBaseUrl($baseUrl);
 		$this->xmlConnector->setBaseUrl($baseUrl);
 	}
