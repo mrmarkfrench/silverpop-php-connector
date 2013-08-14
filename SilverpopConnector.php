@@ -109,11 +109,7 @@ class SilverpopConnector {
 	 * will instead be treated as XML authentication.
 	 */
 	public function authenticate() {
-		if (func_num_args() == 3) {
-			$method = 'authenticateRest';
-		} else {
-			$method = 'authenticateXml';
-		}
+		$method = (func_num_args()==3) ? 'authenticateRest' : 'authenticateXml';
 		return call_user_func_array(array($this, $method), func_get_args());
 	}
 
@@ -169,7 +165,8 @@ class SilverpopConnector {
 	public function setBaseUrl($baseUrl) {
 		// The URL needs a protocol, and SSL is preferred
 		if (substr($baseUrl, 0, 4) != 'http') {
-			$baseUrl = "https://{$baseUrl}";
+			$protocol = (stripos($baseUrl, 'api.pilot')===false) ? 'https' : 'http';
+			$baseUrl = "{$protocol}://{$baseUrl}";
 		}
 		$this->baseUrl = $baseUrl;
 		$this->restConnector->setBaseUrl($baseUrl);
