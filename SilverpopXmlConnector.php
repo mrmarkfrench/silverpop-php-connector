@@ -52,7 +52,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @throws SilverpopConnectorException
 	 */
 	public function addRecipient($listId, $fields, $upsert=false, $createdFrom=self::CREATED_FROM_MANUAL, $lists=array()) {
-		$listId      = (int)$listId;
+		if (!is_numeric($listId)) {
+			$listId = (int)$listId;
+		}
 		$createdFrom = (int)$createdFrom;
 		if (!in_array($createdFrom, array(0,1,2,3))) {
 			throw new SilverpopConnectorException("Unrecognized contact createdFrom value: {$createdFrom}");
@@ -81,7 +83,11 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params .= "</AddRecipient>";
 		$params = new SimpleXmlElement($params);
 		$result = $this->post($params);
-		return (int)$result->Body->RESULT->RecipientId;
+		$recipientId = $result->Body->RESULT->RecipientId;
+		if (!is_numeric($recipientId)) {
+			$recipientId = (int)$recipientId;
+		}
+		return $recipientId;
 	}
 
 	/**
@@ -154,7 +160,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$format    = self::EXPORT_FORMAT_CSV,
 		$columns   = array()) {
 
-		$listId = (int)$listId;
+		if (!is_numeric($listId)) {
+			$listId = (int)$listId;
+		}
 		$type   = urlencode(strtoupper($type));
 		$format = urlencode(strtoupper($format));
 
@@ -200,7 +208,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @return string {WAITING, RUNNING, CANCELLED, ERROR, COMPLETE}
 	 */
 	public function getJobStatus($jobId) {
-		$jobId = (int)$jobId;
+		if (!is_numeric($jobId)) {
+			$jobId = (int)$jobId;
+		}
 
 		$params = "<GetJobStatus>\n\t<JOB_ID>{$jobId}</JOB_ID>\n</GetJobStatus>";
 		$params = new SimpleXmlElement($params);
@@ -215,7 +225,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @return SimpleXmlElement
 	 */
 	public function getListMetaData($listId) {
-		$listId = (int)$listId;
+		if (!is_numeric($listId)) {
+			$listId = (int)$listId;
+		}
 		$params = "<GetListMetaData>\n\t<LIST_ID>{$listId}</LIST_ID>\n</GetListMetaData>";
 		$params = new SimpleXmlElement($params);
 		$result = $this->post($params);
@@ -266,7 +278,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @throws SilverpopConnectorException
 	 */
 	public function getModifiedRecipients($lastModifiedStart, $lastModifiedEnd, $listId) {
-		$listId = (int)$listId;
+		if (!is_numeric($listId)) {
+			$listId = (int)$listId;
+		}
 
 		$params = "<GetModifiedRecipients>
 	<INSERTS_ONLY>false</INSERTS_ONLY>
@@ -300,7 +314,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @return bool
 	 */
 	public function removeRecipient($listId, $email, $keyFields=array()) {
-		$listId = (int)$listId;
+		if (!is_numeric($listId)) {
+			$listId = (int)$listId;
+		}
 
 		$params = "<RemoveRecipient>
 	<LIST_ID>{$listId}</LIST_ID>
@@ -394,8 +410,12 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @throws SilverpopConnectorException
 	 */
 	public function updateRecipient($listId, $recipientId, $fields) {
-		$recipientId = (int)$recipientId;
-		$listId = (int)$listId;
+		if (!is_numeric($recipientId)) {
+			$recipientId = (int)$recipientId;
+		}
+		if (!is_numeric($listId)) {
+			$listId = (int)$listId;
+		}
 
 		$params = "<UpdateRecipient>
 	<RECIPIENT_ID>{$recipientId}</RECIPIENT_ID>

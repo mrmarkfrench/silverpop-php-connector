@@ -23,16 +23,20 @@ echo "Retrieving lists...\n";
 $result = SilverpopConnector::getInstance()->getLists();
 if (count($result)) {
 	echo " -- Found ".count($result)." lists.\n";
-	$listId      = empty($result[0]['ID'])   ? null : (string)$result[0]['ID'];
-	$listMembers = empty($result[0]['SIZE']) ? null : (string)$result[0]['SIZE'];
+	$listId      = null;
+	$listMembers = PHP_INT_MAX;
 	foreach ($result as $list) {
+		if ($list->TYPE != 0) {
+			// Only want a database, not some other list type
+			continue;
+		}
 		if ($listMembers <= 1 || ($list->SIZE > 1 && $list->SIZE < $listMembers)) {
 			$listId      = (string)$list->ID;
 			$listMembers = (string)$list->SIZE;
 			$listName    = (string)$list->NAME;
 		}
 	}
-	if (empty($listMembers)) {
+	if (empty($listId)) {
 		echo " -- No populated lists found!\n";
 		die("Exiting");
 	} else {
