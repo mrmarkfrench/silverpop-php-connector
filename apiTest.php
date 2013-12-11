@@ -7,11 +7,15 @@ $credentials = parse_ini_file(__DIR__.'/authData.ini', true);
 
 echo "Setting base URL...\n";
 SilverpopConnector::getInstance($credentials['silverpop']['baseUrl']);
-echo "Authenticating to XML API...\n";
-SilverpopConnector::getInstance()->authenticateXml(
-	$credentials['silverpop']['username'],
-	$credentials['silverpop']['password']
-	);
+if (!empty($credentials['silverpop']['username'])) {
+	echo "Authenticating to XML API...\n";
+	SilverpopConnector::getInstance()->authenticateXml(
+		$credentials['silverpop']['username'],
+		$credentials['silverpop']['password']
+		);
+} else {
+	echo "No XML credentials. Performing combined authentication against REST...\n";
+}
 echo "Authenticating to REST API...\n";
 SilverpopConnector::getInstance()->authenticateRest(
 	$credentials['silverpop']['client_id'],

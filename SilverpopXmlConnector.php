@@ -430,7 +430,11 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params = new SimpleXmlElement($params);
 
 		$result = $this->post($params);
-		return $result->Body->RESULT->RecipientId;
+		$recipientId = $result->Body->RESULT->RecipientId;
+		if (!preg_match('/^\d+$/', $recipientId)) {
+			$recipientId = (int)$recipientId;
+		}
+		return $recipientId;
 	}
 
 
