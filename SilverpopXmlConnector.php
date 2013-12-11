@@ -406,10 +406,11 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @param int   $listId      The ID of the recipient's list
 	 * @param int   $recipientId The ID of the recipient to update
 	 * @param array $fields      An associative array of keys and values to update
+	 * @param array $optParams   An associative array of optional parameters
 	 * @return SimpleXmlElement
 	 * @throws SilverpopConnectorException
 	 */
-	public function updateRecipient($listId, $recipientId, $fields) {
+	public function updateRecipient($listId, $recipientId, $fields, $optParams=array()) {
 		if (!preg_match('/^\d+$/', $recipientId)) {
 			$recipientId = (int)$recipientId;
 		}
@@ -420,6 +421,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params = "<UpdateRecipient>
 	<RECIPIENT_ID>{$recipientId}</RECIPIENT_ID>
 	<LIST_ID>{$listId}</LIST_ID>\n";
+		foreach ($optParams as $key => $value) {
+			$params .= "\t<{$key}>{$value}</{$key}>\n";
+		}
 		foreach ($fields as $key => $value) {
 			$params .= "\t<COLUMN>\n";
 			$params .= "\t\t<NAME>{$key}</NAME>\n";
