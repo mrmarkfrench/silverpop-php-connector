@@ -441,6 +441,61 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		return $recipientId;
 	}
 
+	/**
+	 * //SK 20140130 Fetch data for a recipient in Silverpop. 
+	 * 
+	 * @param int	$listId	The ID of the DB/Contact list
+	 * @param array	$mainFields	An associative array of main fields to match (EMAIL, RECIPIENT_ID, VISITOR_KEY etc)
+	 * @param array	$customFields	An associative array of unique/key columns when required
+	 * @return SimpleXmlElement
+	 * @throws SilverpopConnectorException
+	 *
+	 * Silverpop Note: Unique key columns must be part of the submission with column names and values. 
+	 * Silverpop Note: If more than one contact is found matching the lookup columns, the oldest contact will be returned.
+	 */
+	public function selectRecipientData ($listId, $mainFields=array(), $customFields=array()) {
+		if (!preg_match('/^\d+$/', $listId)) {
+			$listId = (int)$listId;
+		}
+
+		$params = "<SelectRecipientData>
+	<LIST_ID>{$listId}</LIST_ID>\n";
+		foreach ($mainFields as $key => $value) { 
+		//e.g. 'RETURN_CONTACT_LISTS' => 'true', 'EMAIL' => $email
+			$key = strtoupper ($key); //SK 20140203
+			$params .= "\t<{$key}>{$value}</{$key}>\n";
+		}
+		foreach ($customFields as $key => $value) {
+			$params .= "\t<COLUMN>\n";
+			$params .= "\t\t<NAME>{$key}</NAME>\n";
+			$params .= "\t\t<VALUE>{$value}</VALUE>\n";
+			$params .= "\t</COLUMN>\n";
+		}
+		$params .= "</SelectRecipientData>";
+		$params = new SimpleXmlElement($params);
+
+		$result =$this->post($params);
+
+		$recipientData = $result->Body->RESULT;
+		/*
+		$recipientData->RecipientId = $result->Body->RESULT->RecipientId;
+		if (!preg_match('/^\d+$/', $recipientData->RecipientId)) {
+			$recipientData->RecipientId = (int)$recipientData->RecipientId;
+		}
+		$recipientData->RecipientId = (string)$result->Body->RESULT->RecipientId;
+		$recipientData->Email = (string)$result->Body->RESULT->Email;
+		$recipientData->EmailType = (string)$result->Body->RESULT->EmailType;
+		$recipientData->LastModified = (string)$result->Body->RESULT->LastModified;
+		$recipientData->CreatedFrom = (string)$result->Body->RESULT->CreatedFrom;
+		$recipientData->OptedIn = (string)$result->Body->RESULT->OptedIn;
+		$recipientData->OptedOut = (string)$result->Body->RESULT->OptedOut;
+		$recipientData->ResumeSendDate = (string)$result->Body->RESULT->ResumeSendDate;
+		$recipientData->ORGANIZATION_ID = (string)$result->Body->RESULT->ORGANIZATION_ID;
+		$recipientData->CRMLeadSource = (string)$result->Body->RESULT->CRMLeadSource;
+		$recipientData->COLUMNS = $columns;
+		*/
+		return $recipientData;		
+	}	
 
 	//////////////////////////////////////////////////////////////////////////
 	// PROTECTED ////////////////////////////////////////////////////////////
