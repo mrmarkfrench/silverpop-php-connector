@@ -1,3 +1,7 @@
+# Auth settings #
+#################
+authData.ini
+
 # Compiled source #
 ###################
 *.com
