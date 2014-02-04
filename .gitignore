@@ -1,8 +1,3 @@
-# SK don't copy auth settings, rewrite rules or specific list requests
-authData.ini
-.htaccess
-mygym*
-
 # Compiled source #
 ###################
 *.com
