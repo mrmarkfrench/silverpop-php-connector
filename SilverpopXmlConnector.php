@@ -480,6 +480,31 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		
 		return $recipientData;		
 	}	
+	
+	/**
+	 * //SK 20140205 Send mailing (Code by RR). 
+	 * 
+	 * @param string	$email	The email address to send the mailing to
+	 * @param int	$autoresponder	The ID of the Autoresponder
+	 *
+	 * @return SimpleXmlElement
+	 * @throws SilverpopConnectorException
+	 *
+	 */
+	public function sendMailing($email, $autoresponder) {
+		if (!preg_match('/^\d+$/', $autoresponder)) {
+			$autoresponder = (int)$autoresponder;
+		}
+
+		$params = "<SendMailing>\n";
+		$params .= "\t<MailingId>{$autoresponder}</MailingId>\n";
+		$params .= "\t<RecipientEmail>{$email}</RecipientEmail>\n";
+		$params .= "</SendMailing>";
+
+		$params = new SimpleXmlElement($params);
+		$result = $this->post($params);
+		return $result->Body->RESULT;
+	}
 
 	//////////////////////////////////////////////////////////////////////////
 	// PROTECTED ////////////////////////////////////////////////////////////
