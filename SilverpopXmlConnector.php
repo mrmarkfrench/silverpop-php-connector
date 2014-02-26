@@ -335,6 +335,35 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	}
 
 	/**
+	 * Performs Silverpop Logout so concurrent requests can take place
+	 * 
+	 * @throws SilverpopConnectorException
+	 */
+	public function logout() {
+		$params = "<Envelope>\n\t<Body>\n\t\t<Logout/>\n\t</Body></Envelope>";
+
+		$ch = curl_init();
+		$curlParams = array(
+			CURLOPT_URL            => $this->baseUrl.'/XMLAPI',
+			CURLOPT_FOLLOWLOCATION => 1,
+			CURLOPT_CONNECTTIMEOUT => 10,
+			CURLOPT_MAXREDIRS      => 3,
+			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_POST           => 1,
+			CURLOPT_POSTFIELDS     => http_build_query(array('xml'=>$params)),
+			);
+		$set = curl_setopt_array($ch, $curlParams);
+
+		$resultStr = curl_exec($ch);
+		curl_close($ch);
+		$result = $this->checkResponse($resultStr);
+
+		$this->sessionId = null;
+	}
+
+
+
+	/**
 	 * Set the session ID used to authenticate connections. Use this method
 	 * to set a pre-existing session ID that has not yet expired, in order to
 	 * avoid re-authenticating.
@@ -439,6 +468,112 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 			$recipientId = (int)$recipientId;
 		}
 		return $recipientId;
+	}
+
+	/**
+	 * //SK 20140220 RawRecipientDataExport all elements are optional...
+	 * 
+	 * @param int or array 	$mailingId	The ID (or associative array with TYPE => ID) of the mailing(s) - see Notes!
+	 * @param array	$dates	Optional array of dates with TYPE => DATE. TODO convert to mm/dd/yyyy hh:mm:ss when differently formatted	
+	 * @param string or array	$flags	A single flag or an array of optional flags
+	 * @param array	$optParams	Associative array of optional params, e.g.: 
+	 * 	EXPORT_FORMAT (int), EMAIL (notification e-mail address), <RETURN_MAILING_NAME> (true) <RETURN_SUBJECT>true, RETURN_CRM_CAMPAIGN_ID>true 
+	 * @param array	$listColumns	An associative array of unique/key columns to be included in the exported file
+	 * @return SimpleXmlElement
+	 * @throws SilverpopConnectorException
+	 *
+	 * Silverpop Note: MailingId - TYPE can be MAILING_ID, REPORT_ID, LIST_ID, CAMPAIGN_ID in varying combinations!!
+	 * Silverpop Note: Export format default csv, Encoding that of the Org
+	 * see also https://github.com/Boardroom/smart-popup/blob/master/test_sp_export_api.php
+	 */
+	public function rawRecipientDataExport($mailingId=null, $idType="MAILING_ID", $dates=array(), $flags=null, $optParams=array(), $listColumns=array()) {
+		
+		$mailings = null;
+		if (!empty($mailingId)) {
+			if (!is_array($mailingId)) { 
+				if (!preg_match('/^\d+$/', $mailingId)) {
+					$mailingId = (int)$mailingId;
+				}
+				//$mailings = array("MAILING_ID" => $mailingId);
+				$mailings = array($idType => $mailingId);	
+			} else { 
+				//mailingId is an array
+				//TODO validation - make sure IDs are numbers, also check TYPE?
+				$mailings = $mailingId;	
+			}
+		}
+
+		//SK date validation see http://stackoverflow.com/questions/3720977/preg-match-check-birthday-format-dd-mm-yyyy
+		//check for date AND time or append time 00:00:00 when not provided
+		//if strpos(space, datestring) date = substr(0,strpos),  time = substr(strpos) else date = datestring - append time
+		//list($dd,$mm,$yyyy) = explode('/',$cnt_birthday);
+		//if (!checkdate($mm,$dd,$yyyy)) {
+        //	//convert to date	
+		//}
+
+		if (!empty($flags)) {
+			if (!is_array($flags)) { 
+				$flags = array($flags);	
+			} 
+			//validation: remove anything not a letter/underscore, make uppercase.
+			foreach($flags as $i=>$flag) {
+				$flag = preg_replace("/[^A-Za-z_]/", '', $flag);
+				$flags[$i] = strtoupper($flag);
+			}
+		}
+
+		$params = "<RawRecipientDataExport>";
+		if (!empty($dates)) { 
+			foreach($dates as $dateType => $date) {
+				$params .= "\t<{$dateType}>{$date}</{$dateType}>\n";
+			}
+		}
+		if (!empty($mailings)) { 
+			foreach($mailings as $idType => $mailingId) {
+			$params .= "\t<MAILING>\n";
+				$params .= "\t\t<{$idType}>{$mailingId}</{$idType}>\n";
+			$params .= "\t</MAILING>\n";
+			}
+		}
+		if (!empty($flags)) { 
+			foreach($flags as $flag) {
+				$params .= "\t<{$flag} />\n";
+			}
+		}
+		if (!empty($optParams)) {
+			foreach ($optParams as $key => $value) {
+				$params .= "\t<{$key}>{$value}</{$key}>\n";
+			}
+		}
+		if (!empty($listColumns)) {
+			foreach ($listColumns as $key => $value) {
+				$params .= "\t<COLUMN>\n";
+				$params .= "\t\t<NAME>{$key}</NAME>\n";
+				$params .= "\t\t<VALUE>{$value}</VALUE>\n";
+				$params .= "\t</COLUMN>\n";
+			}
+		}
+		$params .= '</RawRecipientDataExport>';
+
+		$params = new SimpleXmlElement($params);
+
+		$result = $this->post($params);
+
+		$jobId= null; $filePath=null;
+		if (!empty($result->Body->RESULT->MAILING)){
+			$jobId = $result->Body->RESULT->MAILING->JOB_ID;
+			if (!preg_match('/^\d+$/', $jobId)) {
+				$jobId = (int)$jobId;
+			}
+			$filePath = $result->Body->RESULT->MAILING->FILE_PATH;
+		}
+		$msg = $result;
+		$result['msg'] = $msg;
+		$result['jobId'] = $jobId;
+		$result['filePath'] = $filePath;
+	
+		return $result;
+
 	}
 
 	/**
