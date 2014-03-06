@@ -252,7 +252,7 @@ echo "\nSending file {$filePath} via e-mail...";
 	
 
 	if (!empty($file)) { 
-		$mail_message[] = "Filename: {$filename}"
+		$mail_message[] = "Filename: {$filename}";
 		$mail_message[] = "Please find the file attached.";
 	}
 	
