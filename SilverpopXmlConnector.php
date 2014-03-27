@@ -266,6 +266,76 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		}
 		return $lists;
 	}
+	/**
+	 * Get a list of mailings modified within the specified time range.
+	 * 
+	 * @param int $lastModifiedStart An integer timestamp
+	 * @param int $lastModifiedEnd   An integer timestamp
+	 * 
+	 * @return array Returns an array of SimpleXmlElement objects, one for each mailing
+	 * @throws SilverpopConnectorException
+	 */
+	public function getMailingTemplates($lastModifiedStart=0, $lastModifiedEnd=0) { 
+
+		$params = "<GetMailingTemplates>";
+		if (!empty($lastModifiedStart)) $params .= "\n\t<LAST_MODIFIED_TIME_START>".date('m/d/Y H:i:s', $lastModifiedStart)."</LAST_MODIFIED_TIME_START>"; 
+		if (!empty($lastModifiedEnd)) $params .= "\n\t<LAST_MODIFIED_TIME_END>".date('m/d/Y H:i:s', $lastModifiedEnd)."</LAST_MODIFIED_TIME_END>"; 
+		$params .= "\n</GetMailingTemplates>";
+
+		$params = new SimpleXmlElement($params);
+
+		$result =$this->post($params);
+		$modifiedMailings = array();
+		foreach ($result->Body->RESULT->MAILING_TEMPLATE as $mailing) {
+			$modifiedMailings[] = $mailing;
+		}
+		return $modifiedMailings;
+	}
+	/**
+	 * Get a list of mailings modified within the specified time range.
+	 * 
+	 * @param int $lastModifiedStart An integer timestamp
+	 * @param int $lastModifiedEnd   An integer timestamp
+	 * @param string or array	$flags	A single flag or an array of optional flags	
+	 * 
+	 * @return array Returns an array of SimpleXmlElement objects, one for each mailing
+	 * @throws SilverpopConnectorException
+	 */
+	public function getSentMailingsForOrg($dateStart=0, $dateEnd=0, $flags=null) { 
+
+		//flags: e.g. EXCLUDE_TEST_MAILINGS, SENT, EXCLUDE_ZERO_SENT
+		if (!empty($flags)) { 
+			if (!is_array($flags)) { 
+				$flags = array($flags);	
+			} 
+			//validation: remove anything not a letter/underscore, make uppercase.
+			foreach($flags as $i=>$flag) {
+				$flag = preg_replace("/[^A-Za-z_]/", '', $flag);
+				$flags[$i] = strtoupper($flag);
+			}
+		}
+
+		$params = "<GetSentMailingsForOrg>";
+		if (!empty($dateStart)) $params .= "\n\t<DATE_START>".date('m/d/Y H:i:s', $dateStart)."</DATE_START>"; 
+		if (!empty($dateEnd)) $params .= "\n\t<DATE_END>".date('m/d/Y H:i:s', $dateEnd)."</DATE_END>"; 
+		
+		if (!empty($flags)) { 
+			foreach($flags as $flag) {
+				$params .= "\n\t<{$flag} />";
+			}
+		}
+		
+		$params .= "\n</GetSentMailingsForOrg>";
+
+		$params = new SimpleXmlElement($params);
+
+		$result =$this->post($params);
+		$sentMailings = array();
+		foreach ($result->Body->RESULT->Mailing as $mailing) {
+			$sentMailings[] = $mailing;
+		}
+		return $sentMailings;
+	}
 
 	/**
 	 * Get a list of recipients modified within the specified time range.

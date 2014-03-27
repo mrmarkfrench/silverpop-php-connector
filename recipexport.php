@@ -282,8 +282,8 @@ echo "\nSending file {$filePath} via e-mail...";
         $boundary = 'PHP-mixed-'.md5(rand()); 
 
 // Headers
-        $headers = 'Mime-Version: 1.0' . $rn;		            	
-		$headers .= 'X-Mailer: PHP v' . phpversion() . $rn; //SK
+		$headers = 'X-Mailer: PHP v' . phpversion() . $rn; //SK
+        $headers .= 'Mime-Version: 1.0' . $rn;		          
 		//$headers .= 'X-Originating-IP: ' . $_SERVER['SERVER_ADDR'] . $rn; //SK
 		
 		if (!empty($_headers)) {
@@ -296,9 +296,9 @@ echo "\nSending file {$filePath} via e-mail...";
 //Body 
         $msg = "";//$rn;
         $msg .= '--' . $boundary . $rn; 
-        $msg .= 'Content-Type: text/plain; format=flowed; charset="utf-8"' . $rn; //SK
-        $msg .= 'Content-Transfer-Encoding: 8bit' . $rn; //SK
-        $msg .= $message . $rn;//$rn . $message . $rn;
+        $msg .= 'Content-Type: text/plain; format=flowed; charset="iso-8859-1"' . $rn; //SK
+        $msg .= 'Content-Transfer-Encoding: 7bit' . $rn; //SK
+        $msg .= $rn . $message . $rn;//$rn . $message . $rn;
 
 //Attachment
         //TODO phpseclib can also get filetype etc, currently zip hardcoded
