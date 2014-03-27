@@ -45,8 +45,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * 
 	 * @param integer $listId
 	 * @param array   $fields
-	 * @param bool    $autoreply Automatically trigger auto-responders?
 	 * @param bool    $upsert Perform an update if contact already exists?
+	 * @param bool    $autoreply Automatically trigger auto-responders?
 	 * @param integer $createdFrom
 	 * @param array   $lists
 	 * @return int Returns the RecipientId of the new recipient
