@@ -45,27 +45,31 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * 
 	 * @param integer $listId
 	 * @param array   $fields
+	 * @param bool    $autoreply Automatically trigger auto-responders?
 	 * @param bool    $upsert Perform an update if contact already exists?
 	 * @param integer $createdFrom
 	 * @param array   $lists
 	 * @return int Returns the RecipientId of the new recipient
 	 * @throws SilverpopConnectorException
 	 */
-	public function addRecipient($listId, $fields, $upsert=false, $createdFrom=self::CREATED_FROM_MANUAL, $lists=array()) {
-		if (!preg_match('/^\d+$/', $listId)) {
-			$listId = (int)$listId;
-		}
-		$createdFrom = (int)$createdFrom;
-		if (!in_array($createdFrom, array(0,1,2,3))) {
-			throw new SilverpopConnectorException("Unrecognized contact createdFrom value: {$createdFrom}");
-		}
-		$updateIfFound = $upsert ? 'TRUE' : 'FALSE';
-		$lists = array_map("intval", $lists);
-
-		$params = "<AddRecipient>
-	<LIST_ID>{$listId}</LIST_ID>
-	<CREATED_FROM>{$createdFrom}</CREATED_FROM>
-	<UPDATE_IF_FOUND>{$updateIfFound}</UPDATE_IF_FOUND>\n";
+	public function addRecipient($listId, $fields, $upsert=false, $autoreply=false, $createdFrom=self::CREATED_FROM_MANUAL, $lists=array()) {
+                if (!preg_match('/^\d+$/', $listId)) {
+                        $listId = (int)$listId;
+                }
+                $createdFrom = (int)$createdFrom;
+                if (!in_array($createdFrom, array(0,1,2,3))) {
+                        throw new SilverpopConnectorException("Unrecognized contact createdFrom value: {$createdFrom}");
+                }
+		$sendAutoreply = $autoreply ? 'TRUE' : 'FALSE';
+                $updateIfFound = $upsert ? 'TRUE' : 'FALSE';
+ 
+                $lists = array_map("intval", $lists);
+ 
+               $params = "<AddRecipient>
+        <LIST_ID>{$listId}</LIST_ID>
+        <CREATED_FROM>{$createdFrom}</CREATED_FROM>
+        <SEND_AUTOREPLY>{$sendAutoreply}</SEND_AUTOREPLY>
+        <UPDATE_IF_FOUND>{$updateIfFound}</UPDATE_IF_FOUND>\n";
 		if (count($lists)) {
 			$params .= "\t<CONTACT_LISTS>\n";
 			foreach($lists as $list) {
