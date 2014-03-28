@@ -59,6 +59,65 @@ foreach ($result->COLUMNS->COLUMN as $column) {
 }
 echo ' -- Found '.count($columns)." columns.\n";
 
+echo "Exporting recipient data...\n";
+
+$result = SilverpopConnector::getInstance()->rawRecipientDataExport();
+
+$jobId    = $result['jobId'];
+$filePath = $result['filePath'];
+echo " -- Job Id: {$jobId}, file path: {$filePath} ";
+//900k csv/90k zip took 1min
+
+//SK 20140203 time page load, part 1 of 2
+$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0];
+$pageLoadStart = $time;
+
+echo getJobStatusLoop($jobId);
+
+//SK 20140203 time page load, part 2 of 2
+$time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0];
+$pageLoadFinish = $time;
+$pageLoadTotal = round(($pageLoadFinish - $pageLoadStart), 4);
+
+echo 'Loop completed in '.$pageLoadTotal.' seconds on '.date('Y-m-d\TH:i:s.000P'); 
+
+//See also: https://github.com/Boardroom/smart-popup/blob/master/test_sp_export_api.php
+function getJobStatusLoop($jobId, $numAttempts = 600) {
+	$isCompleted = false;
+	$attempts = 0;
+	$response = null;
+	//sleep(300); // Sleep for the first five minutes no matter what.
+	while (!$isCompleted && $attempts < $numAttempts) {
+		$jobStatus = SilverpopConnector::getInstance()->getJobStatus($jobId);
+		switch ($jobStatus) {
+			case "COMPLETE":
+				$isCompleted = true;
+			break;
+			case "RUNNING":
+			case "WAITING":
+				// Give the job time to complete.
+				sleep(60);
+			break;
+			case "CANCELED": //yes Silverpop spelled this wrong.
+			case "ERROR":
+			default:
+				$response = "\nError: Silverpop get job status execution failed. Attempts: {$attempts} ";
+			exit(-1);
+			break;
+		}
+		// Increment the attempts; limit attempts.
+		$attempts++;
+	}
+	if ($isCompleted === false) {
+		//$isCompleted = $response;
+		$response .= "\nNot completed. {$attempts} attempts. ";
+	} else { 
+		$response .= "\nJob successfully completed. {$attempts} attempts. "; 
+	}
+	//return $isCompleted;
+	return $response;
+}
+/*
 echo "Exporting list {$listId}...\n";
 $result = SilverpopConnector::getInstance()->exportList(
 	$listId,
@@ -140,3 +199,5 @@ SilverpopConnector::getInstance()->updateRecipient($listId, $recipientId, $updat
 echo "Deleting test contact...\n";
 $email = $newContact['Email'];
 SilverpopConnector::getInstance()->removeRecipient($listId, $email, array('Email'=>$email));
+*/
+
