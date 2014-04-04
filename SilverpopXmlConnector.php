@@ -20,6 +20,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	protected $password  = null;
 	protected $sessionId = null;
 
+	// Silverpop date format 
+	const SPOP_DATE_FORMAT	= 'm/d/Y H:i:s';
+
 	// Contact creation source constants
 	const CREATED_FROM_DB_IMPORT   = 0;
 	const CREATED_FROM_MANUAL      = 1;
@@ -181,10 +184,10 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	<EXPORT_FORMAT>{$format}</EXPORT_FORMAT>
 	<ADD_TO_STORED_FILES/>\n";
 		if (!empty($startDate)) {
-			$params .= '	<DATE_START>'.date('m/d/Y H:i:s', $startDate)."</DATE_START>\n";
+			$params .= '	<DATE_START>'.date(self::SPOP_DATE_FORMAT, $startDate)."</DATE_START>\n";
 		}
 		if (!empty($endDate)) {
-			$params .= '	<DATE_END>'.date('m/d/Y H:i:s', $endDate)."</DATE_END>\n";
+			$params .= '	<DATE_END>'.date(self::SPOP_DATE_FORMAT, $endDate)."</DATE_END>\n";
 		}
 		if (count($columns)) {
 			$params .= "\t<EXPORT_COLUMNS>\n";
@@ -282,8 +285,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	public function getMailingTemplates($lastModifiedStart=0, $lastModifiedEnd=0) { 
 
 		$params = "<GetMailingTemplates>";
-		if (!empty($lastModifiedStart)) $params .= "\n\t<LAST_MODIFIED_TIME_START>".date('m/d/Y H:i:s', $lastModifiedStart)."</LAST_MODIFIED_TIME_START>"; 
-		if (!empty($lastModifiedEnd)) $params .= "\n\t<LAST_MODIFIED_TIME_END>".date('m/d/Y H:i:s', $lastModifiedEnd)."</LAST_MODIFIED_TIME_END>"; 
+		if (!empty($lastModifiedStart)) $params .= "\n\t<LAST_MODIFIED_TIME_START>".date(self::SPOP_DATE_FORMAT, $lastModifiedStart)."</LAST_MODIFIED_TIME_START>"; 
+		if (!empty($lastModifiedEnd)) $params .= "\n\t<LAST_MODIFIED_TIME_END>".date(self::SPOP_DATE_FORMAT, $lastModifiedEnd)."</LAST_MODIFIED_TIME_END>"; 
 		$params .= "\n</GetMailingTemplates>";
 
 		$params = new SimpleXmlElement($params);
@@ -296,10 +299,61 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		return $modifiedMailings;
 	}
 	/**
+	 * Get a listing of mailings sent for an organization for a specified date range and provides metrics for those mailings
+	 * 
+	 * @param int $dateStart An integer timestamp - required!
+	 * @param int $dateEnd   An integer timestamp - required!
+	 * @param string or array	$flags	A single flag or an array of optional flags	
+	 * 
+	 * @return array Returns an array of SimpleXmlElement objects, one for each mailing
+	 * @throws SilverpopConnectorException
+	 */
+	public function getAggregateTrackingForOrg($dateStart=0, $dateEnd=0, $flags=null) { 
+		//flags: e.g. EXCLUDE_TEST_MAILINGS, SENT, SCHEDULED
+		if (!empty($flags)) { 
+			if (!is_array($flags)) { 
+				$flags = array($flags);	
+			} 
+			//validation: remove anything not a letter/underscore, make uppercase.
+			foreach($flags as $i=>$flag) {
+				$flag = preg_replace("/[^A-Za-z_]/", '', $flag);
+				$flags[$i] = strtoupper($flag);
+			}
+		}
+		$now = date(self::SPOP_DATE_FORMAT);
+		if (!empty($dateStart)) { $spopStartDate = date(self::SPOP_DATE_FORMAT, $dateStart); }
+		else { $spopStartDate = date(self::SPOP_DATE_FORMAT, strtotime($now." -1year")); }
+		if (!empty($dateEnd)) { $spopEndDate = date(self::SPOP_DATE_FORMAT, $dateEnd); }
+		else { $spopEndDate = date(self::SPOP_DATE_FORMAT, strtotime($now)); }
+
+
+		$params = "<GetAggregateTrackingForOrg>";
+		//Request fails if dates not provided
+		$params .= "\n\t<DATE_START>".$spopStartDate."</DATE_START>"; 
+		$params .= "\n\t<DATE_END>".$spopEndDate."</DATE_END>"; 
+		
+		if (!empty($flags)) { 
+			foreach($flags as $flag) {
+				$params .= "\n\t<{$flag} />";
+			}
+		}
+		
+		$params .= "\n</GetAggregateTrackingForOrg>";
+
+		$params = new SimpleXmlElement($params);
+		$result =$this->post($params);
+		$sentMailings = array();
+		foreach ($result->Body->RESULT->Mailing as $mailing) {
+			$sentMailings[] = $mailing;
+		}
+		return $sentMailings;
+	}
+
+	/**
 	 * Get a list of mailings modified within the specified time range.
 	 * 
-	 * @param int $lastModifiedStart An integer timestamp
-	 * @param int $lastModifiedEnd   An integer timestamp
+	 * @param int $dateStart An integer timestamp
+	 * @param int $dateEnd   An integer timestamp
 	 * @param string or array	$flags	A single flag or an array of optional flags	
 	 * 
 	 * @return array Returns an array of SimpleXmlElement objects, one for each mailing
@@ -320,8 +374,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		}
 
 		$params = "<GetSentMailingsForOrg>";
-		if (!empty($dateStart)) $params .= "\n\t<DATE_START>".date('m/d/Y H:i:s', $dateStart)."</DATE_START>"; 
-		if (!empty($dateEnd)) $params .= "\n\t<DATE_END>".date('m/d/Y H:i:s', $dateEnd)."</DATE_END>"; 
+		if (!empty($dateStart)) $params .= "\n\t<DATE_START>".date(self::SPOP_DATE_FORMAT, $dateStart)."</DATE_START>"; 
+		if (!empty($dateEnd)) $params .= "\n\t<DATE_END>".date(self::SPOP_DATE_FORMAT, $dateEnd)."</DATE_END>"; 
 		
 		if (!empty($flags)) { 
 			foreach($flags as $flag) {
@@ -332,7 +386,6 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params .= "\n</GetSentMailingsForOrg>";
 
 		$params = new SimpleXmlElement($params);
-
 		$result =$this->post($params);
 		$sentMailings = array();
 		foreach ($result->Body->RESULT->Mailing as $mailing) {
@@ -361,8 +414,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	<CONTACT_TYPE>Contact</CONTACT_TYPE>
 	<LIST_ID>{$listId}</LIST_ID>
 	<INSERTS_ONLY>false</INSERTS_ONLY>
-	<LAST_MODIFIED_TIME_START>".date('m/d/Y H:i:s', $lastModifiedStart).'</LAST_MODIFIED_TIME_START>
-	<LAST_MODIFIED_TIME_END>'.date('m/d/Y H:i:s', $lastModifiedEnd).'</LAST_MODIFIED_TIME_END>
+	<LAST_MODIFIED_TIME_START>".date(self::SPOP_DATE_FORMAT, $lastModifiedStart).'</LAST_MODIFIED_TIME_START>
+	<LAST_MODIFIED_TIME_END>'.date(self::SPOP_DATE_FORMAT, $lastModifiedEnd).'</LAST_MODIFIED_TIME_END>
 	<COLUMNS>
 		<COLUMN name="FirstName" />
 		<COLUMN name="LastName" />
@@ -577,14 +630,6 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 			}
 		}
 
-		//SK date validation see http://stackoverflow.com/questions/3720977/preg-match-check-birthday-format-dd-mm-yyyy
-		//check for date AND time or append time 00:00:00 when not provided
-		//if strpos(space, datestring) date = substr(0,strpos),  time = substr(strpos) else date = datestring - append time
-		//list($dd,$mm,$yyyy) = explode('/',$cnt_birthday);
-		//if (!checkdate($mm,$dd,$yyyy)) {
-        //	//convert to date	
-		//}
-
 		if (!empty($flags)) {
 			if (!is_array($flags)) { 
 				$flags = array($flags);	
@@ -599,7 +644,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params = "<RawRecipientDataExport>";
 		if (!empty($dates)) { 
 			foreach($dates as $dateType => $date) {
-				$params .= "\t<{$dateType}>{$date}</{$dateType}>\n";
+				$params .= "\t<{$dateType}>{".date(self::SPOP_DATE_FORMAT, $date)."}</{$dateType}>\n";
 			}
 		}
 		if (!empty($mailings)) { 
