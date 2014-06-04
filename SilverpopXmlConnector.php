@@ -156,7 +156,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @param int    $endDate   A timestamp for date boundaries
 	 * @param string $type      One fo the EXPORT_TYPE_* constants
 	 * @param string $format    One of the EXPORT_FORMAT_* constants
-	 * @param        $flags   	A single flag or list of flags to use, e.g. <ADD_TO_STORED_FILES/> & <USE_CREATED_DATE/>
+	 * @param mixed  $flags   	A single flag or array of flags to use, e.g. <ADD_TO_STORED_FILES/> & <USE_CREATED_DATE/>
 	 * @param array  $optParams A list of optional parameters as key=>value pairs e.g. <LIST_DATE_FORMAT>dd/mm/yyyy</LIST_DATE_FORMAT>, <EMAIL> etc	 
 	 * @param array  $columns   A list of column names to export
 	 * @return array An array of ('jobId'=>[int],'filePath'=>[string])
@@ -324,7 +324,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * 
 	 * @param int $dateStart An integer timestamp - required!
 	 * @param int $dateEnd   An integer timestamp - required!
-	 * @param string or array	$flags	A single flag or an array of optional flags	
+	 * @param mixed	$flags	A single flag or an array of optional flags	
 	 * 
 	 * @return array Returns an array of SimpleXmlElement objects, one for each mailing
 	 * @throws SilverpopConnectorException
@@ -383,7 +383,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * 
 	 * @param int $dateStart An integer timestamp
 	 * @param int $dateEnd   An integer timestamp
-	 * @param string or array	$flags	A single flag or an array of optional flags	
+	 * @param mixed	$flags	A single flag or an array of optional flags	
 	 * 
 	 * @return array Returns an array of SimpleXmlElement objects, one for each mailing
 	 * @throws SilverpopConnectorException
@@ -630,9 +630,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	/**
 	 * //SK 20140220 RawRecipientDataExport all elements are optional...
 	 * 
-	 * @param int or array 	$mailingId	The ID (or associative array with TYPE => ID) of the mailing(s) - see Notes!
+	 * @param mixed	$mailingId	The ID (int or associative array with TYPE => ID) of the mailing(s) - see Notes!
 	 * @param array	$dates	Optional array of dates with TYPE => DATE. TODO convert to mm/dd/yyyy hh:mm:ss when differently formatted	
-	 * @param string or array	$flags	A single flag or an array of optional flags, e.g. MOVE_TO_FTP
+	 * @param mixed	$flags	A single flag or an array of optional flags, e.g. MOVE_TO_FTP
 	 * @param array	$optParams	Associative array of optional params, e.g.: 
 	 * 	EXPORT_FORMAT (int), EMAIL (notification e-mail address), <RETURN_MAILING_NAME> (true) <RETURN_SUBJECT>true, RETURN_CRM_CAMPAIGN_ID>true 
 	 * @param array	$listColumns	An associative array of unique/key columns to be included in the exported file
