@@ -156,24 +156,32 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @param int    $endDate   A timestamp for date boundaries
 	 * @param string $type      One fo the EXPORT_TYPE_* constants
 	 * @param string $format    One of the EXPORT_FORMAT_* constants
+	 * @param        $flags   	A single flag or list of flags to use, e.g. <ADD_TO_STORED_FILES/> & <USE_CREATED_DATE/>
+	 * @param array  $optParams A list of optional parameters as key=>value pairs e.g. <LIST_DATE_FORMAT>dd/mm/yyyy</LIST_DATE_FORMAT>, <EMAIL> etc	 
 	 * @param array  $columns   A list of column names to export
-	 * SK TODO @param array  $flags   	A list of flags to use, e.g. <ADD_TO_STORED_FILES/>
 	 * @return array An array of ('jobId'=>[int],'filePath'=>[string])
 	 */
-	public function exportList(
-		$listId,
-		$startDate = null,
-		$endDate   = null,
-		$type      = self::EXPORT_TYPE_ALL,
-		$format    = self::EXPORT_FORMAT_CSV,
-		$columns   = array()) {
+	public function exportList($listId, $startDate = null, $endDate = null, $type = self::EXPORT_TYPE_ALL, $format = self::EXPORT_FORMAT_CSV, 
+		$flags = null, $optParams = array(), $columns = array()) {
 
 		if (!preg_match('/^\d+$/', $listId)) {
 			$listId = (int)$listId;
 		}
 		$type   = urlencode(strtoupper($type));
 		$format = urlencode(strtoupper($format));
-
+		
+		//flags: e.g. ADD_TO_STORED_FILES, USE_CREATED_DATE
+		if (!empty($flags)) { 
+			if (!is_array($flags)) { 
+				$flags = array($flags);	
+			} 
+			//validation: remove anything not a letter/underscore, make uppercase.
+			foreach($flags as $i=>$flag) {
+				$flag = preg_replace("/[^A-Za-z_]/", '', $flag);
+				$flags[$i] = strtoupper($flag);
+			}
+		}
+		
 		$columnsToIgnore = array(
 			'LIST_ID',
 			'MAILING_ID',
@@ -183,12 +191,23 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	<LIST_ID>{$listId}</LIST_ID>
 	<EXPORT_TYPE>{$type}</EXPORT_TYPE>
 	<EXPORT_FORMAT>{$format}</EXPORT_FORMAT>\n";
-	//<ADD_TO_STORED_FILES/>\n";
+
+		if (!empty($flags)) {
+			foreach($flags as $flag) {
+			$params .= "\t<{$flag}/>\n";		
+			}
+		}
+		if (!empty($optParams)) {
+			foreach ($optParams as $key => $value) {
+			$params .= "\t<{$key}>{$value}</{$key}>\n";
+			}
+		}
+
 		if (!empty($startDate)) {
-			$params .= '	<DATE_START>'.date(self::SPOP_DATE_FORMAT, $startDate)."</DATE_START>\n";
+			$params .= "\t<DATE_START>".date(self::SPOP_DATE_FORMAT, $startDate)."</DATE_START>\n";
 		}
 		if (!empty($endDate)) {
-			$params .= '	<DATE_END>'.date(self::SPOP_DATE_FORMAT, $endDate)."</DATE_END>\n";
+			$params .= "\t<DATE_END>".date(self::SPOP_DATE_FORMAT, $endDate)."</DATE_END>\n";
 		}
 		if (count($columns)) {
 			$params .= "\t<EXPORT_COLUMNS>\n";
@@ -285,11 +304,11 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 */
 	public function getMailingTemplates($lastModifiedStart=0, $lastModifiedEnd=0) { 
 
-		$params = "<GetMailingTemplates>";
-		$params .= "\n\t<VISIBILITY>1</VISIBILITY>"; //0 private, 1 shared
-		if (!empty($lastModifiedStart)) $params .= "\n\t<LAST_MODIFIED_TIME_START>".date(self::SPOP_DATE_FORMAT, $lastModifiedStart)."</LAST_MODIFIED_TIME_START>"; 
-		if (!empty($lastModifiedEnd)) $params .= "\n\t<LAST_MODIFIED_TIME_END>".date(self::SPOP_DATE_FORMAT, $lastModifiedEnd)."</LAST_MODIFIED_TIME_END>"; 
-		$params .= "\n</GetMailingTemplates>";
+		$params = "<GetMailingTemplates>\n";
+		$params .= "\t<VISIBILITY>1</VISIBILITY>\n"; //0 private, 1 shared
+		if (!empty($lastModifiedStart)) $params .= "\t<LAST_MODIFIED_TIME_START>".date(self::SPOP_DATE_FORMAT, $lastModifiedStart)."</LAST_MODIFIED_TIME_START>\n"; 
+		if (!empty($lastModifiedEnd)) $params .= "\t<LAST_MODIFIED_TIME_END>".date(self::SPOP_DATE_FORMAT, $lastModifiedEnd)."</LAST_MODIFIED_TIME_END>\n"; 
+		$params .= "</GetMailingTemplates>";
 
 		$params = new SimpleXmlElement($params);
 
@@ -329,18 +348,18 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		else { $spopEndDate = date(self::SPOP_DATE_FORMAT, strtotime($now)); }
 
 
-		$params = "<GetAggregateTrackingForOrg>";
+		$params = "<GetAggregateTrackingForOrg>\n";
 		//Request fails if dates not provided
-		$params .= "\n\t<DATE_START>".$spopStartDate."</DATE_START>"; 
-		$params .= "\n\t<DATE_END>".$spopEndDate."</DATE_END>"; 
+		$params .= "\t<DATE_START>".$spopStartDate."</DATE_START>\n"; 
+		$params .= "\t<DATE_END>".$spopEndDate."</DATE_END>\n"; 
 		
 		if (!empty($flags)) { 
 			foreach($flags as $flag) {
-				$params .= "\n\t<{$flag} />";
+				$params .= "\t<{$flag} />\n";
 			}
 		}
 		
-		$params .= "\n</GetAggregateTrackingForOrg>";
+		$params .= "</GetAggregateTrackingForOrg>";
 
 		$params = new SimpleXmlElement($params);
 		$result =$this->post($params);
@@ -383,17 +402,17 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 			}
 		}
 
-		$params = "<GetSentMailingsForOrg>";
-		if (!empty($dateStart)) $params .= "\n\t<DATE_START>".date(self::SPOP_DATE_FORMAT, $dateStart)."</DATE_START>"; 
-		if (!empty($dateEnd)) $params .= "\n\t<DATE_END>".date(self::SPOP_DATE_FORMAT, $dateEnd)."</DATE_END>"; 
+		$params = "<GetSentMailingsForOrg>\n";
+		if (!empty($dateStart)) $params .= "\t<DATE_START>".date(self::SPOP_DATE_FORMAT, $dateStart)."</DATE_START>\n"; 
+		if (!empty($dateEnd)) $params .= "\t<DATE_END>".date(self::SPOP_DATE_FORMAT, $dateEnd)."</DATE_END>\n"; 
 		
 		if (!empty($flags)) { 
 			foreach($flags as $flag) {
-				$params .= "\n\t<{$flag} />";
+				$params .= "\t<{$flag} />\n";
 			}
 		}
 		
-		$params .= "\n</GetSentMailingsForOrg>";
+		$params .= "</GetSentMailingsForOrg>";
 
 		$params = new SimpleXmlElement($params);
 
@@ -415,7 +434,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @return array Returns an array of SimpleXmlElement objects, one for each recipient
 	 * @throws SilverpopConnectorException
 	 */
-	public function getModifiedRecipients($listId, lastModifiedStart, $lastModifiedEnd) {
+	public function getModifiedRecipients($listId, $lastModifiedStart, $lastModifiedEnd) {
 		if (!preg_match('/^\d+$/', $listId)) {
 			$listId = (int)$listId;
 		}
@@ -572,12 +591,12 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * 
 	 * @param int   $listId      The ID of the recipient's list
 	 * @param int   $recipientId The ID of the recipient to update
-	 * @param array $fields      An associative array of keys and values to update
+	 * @param array $columns     An associative array of keys and values to update
 	 * @param array $optParams   An associative array of optional parameters
 	 * @return SimpleXmlElement
 	 * @throws SilverpopConnectorException
 	 */
-	public function updateRecipient($listId, $recipientId, $fields, $optParams=array()) {
+	public function updateRecipient($listId, $recipientId, $columns, $optParams=array()) {
 		if (!preg_match('/^\d+$/', $recipientId)) {
 			$recipientId = (int)$recipientId;
 		}
@@ -591,7 +610,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		foreach ($optParams as $key => $value) {
 			$params .= "\t<{$key}>{$value}</{$key}>\n";
 		}
-		foreach ($fields as $key => $value) {
+		foreach ($columns as $key => $value) {
 			$params .= "\t<COLUMN>\n";
 			$params .= "\t\t<NAME>{$key}</NAME>\n";
 			$params .= "\t\t<VALUE>{$value}</VALUE>\n";
@@ -613,14 +632,14 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * 
 	 * @param int or array 	$mailingId	The ID (or associative array with TYPE => ID) of the mailing(s) - see Notes!
 	 * @param array	$dates	Optional array of dates with TYPE => DATE. TODO convert to mm/dd/yyyy hh:mm:ss when differently formatted	
-	 * @param string or array	$flags	A single flag or an array of optional flags
+	 * @param string or array	$flags	A single flag or an array of optional flags, e.g. MOVE_TO_FTP
 	 * @param array	$optParams	Associative array of optional params, e.g.: 
 	 * 	EXPORT_FORMAT (int), EMAIL (notification e-mail address), <RETURN_MAILING_NAME> (true) <RETURN_SUBJECT>true, RETURN_CRM_CAMPAIGN_ID>true 
 	 * @param array	$listColumns	An associative array of unique/key columns to be included in the exported file
 	 * @return SimpleXmlElement
 	 * @throws SilverpopConnectorException
 	 *
-	 * Silverpop Note: MailingId - TYPE can be MAILING_ID, REPORT_ID, LIST_ID, CAMPAIGN_ID in varying combinations!!
+	 * Silverpop Note: MailingId - TYPE can be MAILING_ID, REPORT_ID, LIST_ID, CAMPAIGN_ID in varying combinations
 	 * Silverpop Note: Export format default csv, Encoding that of the Org
 	 * see also https://github.com/Boardroom/smart-popup/blob/master/test_sp_export_api.php
 	 */
@@ -655,7 +674,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params = "<RawRecipientDataExport>";
 		if (!empty($dates)) { 
 			foreach($dates as $dateType => $date) {
-				$params .= "\t<{$dateType}>{".date(self::SPOP_DATE_FORMAT, $date)."}</{$dateType}>\n";
+				$params .= "\t<{$dateType}>".date(self::SPOP_DATE_FORMAT, $date)."</{$dateType}>\n";
 			}
 		}
 		if (!empty($mailings)) { 
