@@ -157,6 +157,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @param string $type      One fo the EXPORT_TYPE_* constants
 	 * @param string $format    One of the EXPORT_FORMAT_* constants
 	 * @param array  $columns   A list of column names to export
+	 * SK TODO @param array  $flags   	A list of flags to use, e.g. <ADD_TO_STORED_FILES/>
 	 * @return array An array of ('jobId'=>[int],'filePath'=>[string])
 	 */
 	public function exportList(
@@ -181,8 +182,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params = "<ExportList>
 	<LIST_ID>{$listId}</LIST_ID>
 	<EXPORT_TYPE>{$type}</EXPORT_TYPE>
-	<EXPORT_FORMAT>{$format}</EXPORT_FORMAT>
-	<ADD_TO_STORED_FILES/>\n";
+	<EXPORT_FORMAT>{$format}</EXPORT_FORMAT>\n";
+	//<ADD_TO_STORED_FILES/>\n";
 		if (!empty($startDate)) {
 			$params .= '	<DATE_START>'.date(self::SPOP_DATE_FORMAT, $startDate)."</DATE_START>\n";
 		}
@@ -285,6 +286,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	public function getMailingTemplates($lastModifiedStart=0, $lastModifiedEnd=0) { 
 
 		$params = "<GetMailingTemplates>";
+		$params .= "\n\t<VISIBILITY>1</VISIBILITY>"; //0 private, 1 shared
 		if (!empty($lastModifiedStart)) $params .= "\n\t<LAST_MODIFIED_TIME_START>".date(self::SPOP_DATE_FORMAT, $lastModifiedStart)."</LAST_MODIFIED_TIME_START>"; 
 		if (!empty($lastModifiedEnd)) $params .= "\n\t<LAST_MODIFIED_TIME_END>".date(self::SPOP_DATE_FORMAT, $lastModifiedEnd)."</LAST_MODIFIED_TIME_END>"; 
 		$params .= "\n</GetMailingTemplates>";
@@ -342,11 +344,19 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 
 		$params = new SimpleXmlElement($params);
 		$result =$this->post($params);
-		$sentMailings = array();
+
+		$sentMailings = array(); $topDomainStats = array();
 		foreach ($result->Body->RESULT->Mailing as $mailing) {
 			$sentMailings[] = $mailing;
 		}
-		return $sentMailings;
+		foreach ($result->Body->RESULT->TopDomains as $topdomain) {
+			$topDomainStats[] = $topdomain;
+		}
+		
+		//$result_array = $sentMailings;
+		$result_array = array($sentMailings, $topDomainStats);
+		
+		return $result_array;
 	}
 
 	/**
@@ -386,6 +396,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params .= "\n</GetSentMailingsForOrg>";
 
 		$params = new SimpleXmlElement($params);
+
 		$result =$this->post($params);
 		$sentMailings = array();
 		foreach ($result->Body->RESULT->Mailing as $mailing) {
@@ -397,14 +408,14 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	/**
 	 * Get a list of recipients modified within the specified time range.
 	 * 
+	 * @param int $listId
 	 * @param int $lastModifiedStart An integer timestamp
 	 * @param int $lastModifiedEnd   An integer timestamp
-	 * @param int $listId
 	 * 
 	 * @return array Returns an array of SimpleXmlElement objects, one for each recipient
 	 * @throws SilverpopConnectorException
 	 */
-	public function getModifiedRecipients($lastModifiedStart, $lastModifiedEnd, $listId) {
+	public function getModifiedRecipients($listId, lastModifiedStart, $lastModifiedEnd) {
 		if (!preg_match('/^\d+$/', $listId)) {
 			$listId = (int)$listId;
 		}
