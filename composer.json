@@ -1,0 +1,8 @@
+{
+    "name": "ilanco/silverpop-php-connector",
+    "autoload": {
+        "psr-0": {
+            "": "src/"
+        }
+    }
+}

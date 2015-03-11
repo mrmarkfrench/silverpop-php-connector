@@ -38,5 +38,7 @@ authData.ini
 .Spotlight-V100
 .Trashes
 Icon?
+composer
 ehthumbs.db
+vendor/
 Thumbs.db
