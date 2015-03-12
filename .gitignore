@@ -39,6 +39,7 @@ authData.ini
 .Trashes
 Icon?
 composer
+composer.lock
 ehthumbs.db
 vendor/
 Thumbs.db
