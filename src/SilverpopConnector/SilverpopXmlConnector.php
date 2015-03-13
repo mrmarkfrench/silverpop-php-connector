@@ -1,7 +1,11 @@
 <?php
-require_once __DIR__.'/SilverpopBaseConnector.php';
-require_once __DIR__.'/SilverpopRestConnector.php';
-require_once __DIR__.'/SilverpopConnectorException.php';
+
+namespace SilverpopConnector;
+
+use SilverpopConnector\SilverpopBaseConnector;
+use SilverpopConnector\SilverpopRestConnector;
+use SilverpopConnector\SilverpopConnectorException;
+use SimpleXmlElement;
 
 /**
  * This is a basic class for connecting to the Silverpop XML API. If you

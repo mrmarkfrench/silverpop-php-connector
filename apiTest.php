@@ -1,6 +1,9 @@
 #!/usr/bin/php
 <?php
-require_once __DIR__.'/SilverpopConnector.php';
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+use SilverpopConnector\SilverpopConnector;
 
 echo "Parsing credentials file...\n";
 $credentials = parse_ini_file(__DIR__.'/authData.ini', true);
