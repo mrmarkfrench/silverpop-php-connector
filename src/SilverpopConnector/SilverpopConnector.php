@@ -26,6 +26,7 @@ class SilverpopConnector {
 	protected $xmlConnector    = null;
 
 	protected $baseUrl      = null;
+	protected $dateFormat   = null;
 	protected $username     = null;
 	protected $password     = null;
 	protected $clientId     = null;
@@ -46,10 +47,11 @@ class SilverpopConnector {
 	 * @param string $baseUrl The base API URL for all requests.
 	 * @return SilverpopConnector
 	 */
-	public function __construct($baseUrl='http://api.pilot.silverpop.com') {
+	public function __construct($baseUrl='http://api.pilot.silverpop.com', $dateFormat='MM/dd/yyyy') {
 		$this->restConnector = SilverpopRestConnector::getInstance();
 		$this->xmlConnector  = SilverpopXmlConnector::getInstance();
 		$this->setBaseUrl($baseUrl);
+		$this->setDateFormat($dateFormat);
 	}
 
 	/**
@@ -187,6 +189,17 @@ class SilverpopConnector {
 		$this->baseUrl = $baseUrl;
 		$this->restConnector->setBaseUrl($baseUrl);
 		$this->xmlConnector->setBaseUrl($baseUrl);
+	}
+
+	/**
+	 * Set the date format.
+	 *
+	 * @param string $dateFormat
+	 */
+	public function setDateFormat($dateFormat) {
+		$this->dateFormat = $dateFormat;
+		$this->restConnector->setDateFormat($dateFormat);
+		$this->xmlConnector->setDateFormat($dateFormat);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
