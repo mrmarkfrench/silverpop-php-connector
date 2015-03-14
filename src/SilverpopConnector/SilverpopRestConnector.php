@@ -14,6 +14,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 
 	// Authentication data
 	protected $baseUrl            = null;
+	protected $dateFormat         = null;
 	protected $clientId           = null;
 	protected $clientSecret       = null;
 	protected $refreshToken       = null;

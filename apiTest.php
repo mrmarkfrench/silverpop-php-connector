@@ -54,6 +54,9 @@ if (count($result)) {
 	die("Exiting");
 }
 
+echo "Setting date format to default MM/dd/yyyy\n";
+SilverpopConnector::getInstance()->setDateFormat('MM/dd/yyyy');
+
 echo "Retrieving list meta data...\n";
 $result = SilverpopConnector::getInstance()->getListMetaData($listId);
 $columns = array();
@@ -120,6 +123,7 @@ function getJobStatusLoop($jobId, $numAttempts = 600) {
 	//return $isCompleted;
 	return $response;
 }
+
 /*
 echo "Exporting list {$listId}...\n";
 $result = SilverpopConnector::getInstance()->exportList(

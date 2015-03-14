@@ -19,10 +19,11 @@ use SimpleXmlElement;
 class SilverpopXmlConnector extends SilverpopBaseConnector {
 	protected static $instance = null;
 
-	protected $baseUrl   = null;
-	protected $username  = null;
-	protected $password  = null;
-	protected $sessionId = null;
+	protected $baseUrl    = null;
+	protected $dateFormat = null;
+	protected $username   = null;
+	protected $password   = null;
+	protected $sessionId  = null;
 
 	// Contact creation source constants
 	const CREATED_FROM_DB_IMPORT   = 0;
@@ -183,6 +184,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	<LIST_ID>{$listId}</LIST_ID>
 	<EXPORT_TYPE>{$type}</EXPORT_TYPE>
 	<EXPORT_FORMAT>{$format}</EXPORT_FORMAT>
+	<LIST_DATE_FORMAT>{$this->dateFormat}</LIST_DATE_FORMAT>
 	<ADD_TO_STORED_FILES/>\n";
 		if (!empty($startDate)) {
 			$params .= '	<DATE_START>'.date('m/d/Y H:i:s', $startDate)."</DATE_START>\n";
