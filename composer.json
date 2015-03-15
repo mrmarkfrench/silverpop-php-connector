@@ -2,7 +2,7 @@
     "name": "mrmarkfrench/silverpop-php-connector",
     "type": "library",
     "description": "A connector SDK library for applications integrating with Silverpop, including the Silverpop Universal Behavior API",
-    "keywords": [],
+    "keywords": ["Silverpop"],
     "homepage": "https://github.com/mrmarkfrench/silverpop-php-connector",
     "authors": [
         {
