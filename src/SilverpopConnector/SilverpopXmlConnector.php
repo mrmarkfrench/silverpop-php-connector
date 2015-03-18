@@ -734,6 +734,12 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @throws SilverpopConnectorException
 	 */
 	protected function checkResponse($xml) {
+		// according to Silverpop's API docs, XML response should always be
+		// UTF-8
+		if (mb_check_encoding($xml, 'UTF-8') === false) {
+				$xml = utf8_encode($xml);
+		}
+
 		$response = new SimpleXmlElement($xml);
 		if (!isset($response->Body)) {
 			throw new SilverpopConnectorException("No <Body> element on response: {$xml}");
