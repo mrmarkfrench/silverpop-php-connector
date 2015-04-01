@@ -1,6 +1,9 @@
 <?php
-require_once __DIR__.'/SilverpopBaseConnector.php';
-require_once __DIR__.'/SilverpopConnectorException.php';
+
+namespace SilverpopConnector;
+
+use SilverpopConnector\SilverpopBaseConnector;
+use SilverpopConnector\SilverpopConnectorException;
 
 /**
  * This is a basic class for connecting to the Silverpop API
@@ -11,6 +14,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 
 	// Authentication data
 	protected $baseUrl            = null;
+	protected $dateFormat         = null;
 	protected $clientId           = null;
 	protected $clientSecret       = null;
 	protected $refreshToken       = null;

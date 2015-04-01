@@ -1,7 +1,11 @@
 <?php
-require_once __DIR__.'/SilverpopBaseConnector.php';
-require_once __DIR__.'/SilverpopRestConnector.php';
-require_once __DIR__.'/SilverpopConnectorException.php';
+
+namespace SilverpopConnector;
+
+use SilverpopConnector\SilverpopBaseConnector;
+use SilverpopConnector\SilverpopRestConnector;
+use SilverpopConnector\SilverpopConnectorException;
+use SimpleXmlElement;
 
 /**
  * This is a basic class for connecting to the Silverpop XML API. If you
@@ -23,6 +27,11 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	// Silverpop date format 
 	const SPOP_DATE_FORMAT	= 'm/d/Y H:i:s'; //2 digits with leading zeroes for month/day/hour/min/sec, 4 digit year
 	const SPOP_TIME_FORMAT	= 'm/d/Y h:i:s A'; //see SPOP_DATE_FORMAT, hours as 00-12 with leading zeroes, added AM/PM 
+	protected $baseUrl    = null;
+	protected $dateFormat = null;
+	protected $username   = null;
+	protected $password   = null;
+	protected $sessionId  = null;
 
 	// Contact creation source constants
 	const CREATED_FROM_DB_IMPORT   = 0;

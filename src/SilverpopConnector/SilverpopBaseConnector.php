@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__.'/SilverpopConnectorException.php';
+
+namespace SilverpopConnector;
+
+use SilverpopConnectorException;
 
 /**
  * This is a basic class for connecting to the Silverpop API
@@ -7,6 +10,7 @@ require_once __DIR__.'/SilverpopConnectorException.php';
  */
 abstract class SilverpopBaseConnector {
 	protected $baseUrl      = null;
+	protected $dateFormat   = null;
 
 	///////////////////////////////////////////////////////////////////////////
 	// MAGIC /////////////////////////////////////////////////////////////////
@@ -21,8 +25,9 @@ abstract class SilverpopBaseConnector {
 	 * @param string $baseUrl The base API URL for all requests.
 	 * @return SilverpopConnector
 	 */
-	public function __construct($baseUrl='http://api.pilot.silverpop.com') {
+	public function __construct($baseUrl='http://api.pilot.silverpop.com', $dateFormat='MM/dd/yyyy') {
 		$this->setBaseUrl($baseUrl);
+		$this->setDateFormat($dateFormat);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -77,6 +82,15 @@ abstract class SilverpopBaseConnector {
 			$baseUrl = substr($baseUrl, 0, -1);
 		}
 		$this->baseUrl = $baseUrl;
+	}
+
+	/**
+	 * Set the date format.
+	 *
+	 * @param string $baseUrl
+	 */
+	public function setDateFormat($dateFormat) {
+		$this->dateFormat = $dateFormat;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
