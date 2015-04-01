@@ -21,7 +21,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	protected $sessionId = null;
 
 	// Silverpop date format 
-	const SPOP_DATE_FORMAT	= 'm/d/Y H:i:s';
+	const SPOP_DATE_FORMAT	= 'm/d/Y H:i:s'; //2 digits with leading zeroes for month/day/hour/min/sec, 4 digit year
+	const SPOP_TIME_FORMAT	= 'm/d/Y h:i:s A'; //see SPOP_DATE_FORMAT, hours as 00-12 with leading zeroes, added AM/PM 
 
 	// Contact creation source constants
 	const CREATED_FROM_DB_IMPORT   = 0;
@@ -157,7 +158,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @param string $type      One fo the EXPORT_TYPE_* constants
 	 * @param string $format    One of the EXPORT_FORMAT_* constants
 	 * @param mixed  $flags   	A single flag or array of flags to use, e.g. <ADD_TO_STORED_FILES/> & <USE_CREATED_DATE/>
-	 * @param array  $optParams A list of optional parameters as key=>value pairs e.g. <LIST_DATE_FORMAT>dd/mm/yyyy</LIST_DATE_FORMAT>, <EMAIL> etc	 
+	 * @param array  $optParams A list of optional parameters as key=>value pairs e.g. <LIST_DATE_FORMAT>dd/MM/yyyy</LIST_DATE_FORMAT>, <EMAIL> etc	 
 	 * @param array  $columns   A list of column names to export
 	 * @return array An array of ('jobId'=>[int],'filePath'=>[string])
 	 */
@@ -243,6 +244,42 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params = new SimpleXmlElement($params);
 		$result = $this->post($params);
 		return (string)$result->Body->RESULT->JOB_STATUS;
+	}
+	/**
+	* //SK 2014-07-22
+	 * Get all information on a data job (errored?, cancelled?, waiting, running or completed).
+	 * CHECK - does the jobParam array need to be included in the returned value regardless of what the result is?
+	 * 
+	 * @param int $jobId
+	 * @return array - associative array with jobId, jobStatus, jobDescription, including jobParams with PARAMETERS as NAME => VALUE
+	 */
+	public function getJobStatusInfo($jobId) {
+		if (!preg_match('/^\d+$/', $jobId)) {
+			$jobId = (int)$jobId;
+		}
+
+		$params = "<GetJobStatus>\n\t<JOB_ID>{$jobId}</JOB_ID>\n</GetJobStatus>";
+		$params = new SimpleXmlElement($params);
+		$result = $this->post($params);
+
+		//get info 
+		$jobInfo = array(
+			'jobId'    => (string)$result->Body->RESULT->JOB_ID,
+			'jobStatus' => (string)$result->Body->RESULT->JOB_STATUS,
+			'jobDescription' => (string)$result->Body->RESULT->JOB_DESCRIPTION,
+			);
+		
+		if (!empty($result->Body->RESULT->PARAMETERS)) {
+			//get params
+			$jobParams = array();
+			foreach ($result->Body->RESULT->PARAMETERS->PARAMETER as $param) {
+				$name = (string)$param->NAME;
+				$value = (string)$param->VALUE;
+				$jobParams[$name] = $value;
+			}
+			$jobInfo['jobParams'] = $jobParams;
+		}
+		return $jobInfo; 
 	}
 
 	/**
@@ -634,7 +671,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @param array	$dates	Optional array of dates with TYPE => DATE. TODO convert to mm/dd/yyyy hh:mm:ss when differently formatted	
 	 * @param mixed	$flags	A single flag or an array of optional flags, e.g. MOVE_TO_FTP
 	 * @param array	$optParams	Associative array of optional params, e.g.: 
-	 * 	EXPORT_FORMAT (int), EMAIL (notification e-mail address), <RETURN_MAILING_NAME> (true) <RETURN_SUBJECT>true, RETURN_CRM_CAMPAIGN_ID>true 
+	 * 	EXPORT_FORMAT (int), EMAIL (notification e-mail address), <RETURN_MAILING_NAME> (true) <RETURN_SUBJECT>true, <RETURN_CRM_CAMPAIGN_ID>true 
 	 * @param array	$listColumns	An associative array of unique/key columns to be included in the exported file
 	 * @return SimpleXmlElement
 	 * @throws SilverpopConnectorException
@@ -766,16 +803,67 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	}	
 	
 	/**
-	 * //SK 20140205 Send mailing (Code by RR). 
+	 * //SK 20140704 doubleOptIn -  DoubleOptInRecipient. 
+	 * the recipient needs to be already added to the database (addrecipient)
+	 * returns a new recipient ID (!= addrecipient id)
+	 * Silverpop API documentation Winter 14 p.34
 	 * 
-	 * @param string	$email	The email address to send the mailing to
-	 * @param int	$autoresponder	The ID of the Autoresponder
+	 * @param int	$listId	The ID of the Double Opt in DB
+	 * @param string	$email	The email address of the recipient
+	 * @param bool	$autoReply	Default 'true' to trigger Autoresponder
+	 * @param array	$columns	Optional - Key column(s) as name => value pairs to find recipient
 	 *
 	 * @return SimpleXmlElement
 	 * @throws SilverpopConnectorException
 	 *
 	 */
-	public function sendMailing($email, $autoresponder) {
+	public function doubleOptIn($listId, $email, $autoReply = true, $columns = array()) {
+		if (!preg_match('/^\d+$/', $listId)) {
+			$listId = (int)$listId;
+		}
+		$sendAutoreply = $autoReply ? 'TRUE' : 'FALSE';
+		
+		$params = "<DoubleOptInRecipient>\n";
+		$params .= "\t<LIST_ID>{$listId}</LIST_ID>\n";
+		$params .= "\t<SEND_AUTOREPLY>{$sendAutoreply}</SEND_AUTOREPLY>\n";
+
+		$params .= "\t<COLUMN>\n\t\t<NAME>EMAIL</NAME>\n";		
+		$params .= "\t\t<VALUE>{$email}</VALUE>\n\t</COLUMN>\n";
+
+		if (!empty($columns)) { 	
+			foreach ($columns as $name => $value) {	
+		$params .= "\t<COLUMN>\n";				
+		$params .= "\t\t<NAME>{$name}</NAME>\n";				
+		$params .= "\t\t<VALUE>{$value}</VALUE>\n";
+		$params .= "\t</COLUMN>\n";				
+			}
+		}
+		$params .= "</DoubleOptInRecipient>";
+
+		$params = new SimpleXmlElement($params);
+
+		$result = $this->post($params);
+		$recipientId = $result->Body->RESULT->RecipientId;
+		if (!preg_match('/^\d+$/', $recipientId)) {
+			$recipientId = (int)$recipientId;
+		}
+		return $recipientId;
+	}
+
+	/**
+	 * //SK 20140205 Send mailing (Code by RR), updated 2014-07-21. 
+	 * Silverpop API documentation v Winter 14 is WRONG 
+	 * request needs <NAME> and <VALUE> in uppercase
+	 * 
+	 * @param string	$email	The email address to send the mailing to
+	 * @param int	$autoresponder	The ID of the Autoresponder
+	 * @param array	$columns	Optional - columns as name => value pairs to find recipient
+	 *
+	 * @return SimpleXmlElement
+	 * @throws SilverpopConnectorException
+	 *
+	 */
+	public function sendMailing($email, $autoresponder, $columns = array()) {
 		if (!preg_match('/^\d+$/', $autoresponder)) {
 			$autoresponder = (int)$autoresponder;
 		}
@@ -783,12 +871,261 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params = "<SendMailing>\n";
 		$params .= "\t<MailingId>{$autoresponder}</MailingId>\n";
 		$params .= "\t<RecipientEmail>{$email}</RecipientEmail>\n";
+
+		if (!empty($columns)) { 				
+		$params .= "\t<COLUMNS>\n";				
+			foreach ($columns as $name => $value) {				
+		$params .= "\t\t<COLUMN>\n";				
+		$params .= "\t\t\t<NAME>{$name}</NAME>\n";				
+		$params .= "\t\t\t<VALUE>{$value}</VALUE>\n";
+		$params .= "\t\t</COLUMN>\n";	
+			}					
+		$params .= "\t</COLUMNS>\n";		
+		}
 		$params .= "</SendMailing>";
 
 		$params = new SimpleXmlElement($params);
 		$result = $this->post($params);
 		return $result->Body->RESULT;
 	}
+	/**
+	 * //SK 20140717 CreateContactList 
+	 * Create a new contact list associated with an existing database.
+	 * 
+	 * @param integer $databaseId The ID of the database to associate the new list with
+	 * @param string  $listName   The name of the new Contact List
+	 * @param integer $folderId   Optional - ID of the folder to store the list in
+	 * @param string  $folderPath Optional - path of the folder (MainFolder/SubFolder)
+	 * @return int Returns the ID of the new Contact List - CONTACT_LIST_ID
+	 * @throws SilverpopConnectorException
+	 */
+	public function createContactList($databaseId, $listName, $folderId=0, $folderPath=null) {
+        if (!preg_match('/^\d+$/', $databaseId)) {
+        	$databaseId = (int)$databaseId;
+        }
+        if (!preg_match('/^\d+$/', $folderId)) {
+        	$folderId = (int)$folderId;
+        }
+        // $listName
+        // VISIBILITY 0 private, 1 shared
+ 
+        $params = "<CreateContactList>
+        <DATABASE_ID>{$databaseId}</DATABASE_ID>
+        <CONTACT_LIST_NAME>{$listName}</CONTACT_LIST_NAME>
+        <VISIBILITY>1</VISIBILITY>\n";
+		
+		if (!empty($folderId)) {
+			$params .= "\t<PARENT_FOLDER_ID>{$folderId}</PARENT_FOLDER_ID>\n";
+		}
+		if (!empty($folderPath)) {
+			$params .= "\t<PARENT_FOLDER_PATH>{$folderPath}</PARENT_FOLDER_PATH>\n";
+		}
+	
+		$params .= "</CreateContactList>";
+
+		$params = new SimpleXmlElement($params);
+		$result = $this->post($params);
+		$contactListId = $result->Body->RESULT->CONTACT_LIST_ID;
+		if (!preg_match('/^\d+$/', $contactListId)) {
+			$contactListId = (int)$contactListId;
+		}
+		return $contactListId;
+	}
+	/**
+	 * //SK 20140717 ImportList 
+	 * Updating a database with existing data and mapping files.
+	 * 
+	 * @param string $mapFile  Filename of xml mapping file in the SFTP upload folder of API user
+	 * @param string $dataFile Filename of the csv file in the SFTP upload folder of API user
+	 * @param string $email    Optional - notification e-mail address
+	 * @param string $enc      Optional - encoding of the source/data file 'UTF-8' or 'ISO-8859-1', default: Org Setting
+	 * @return int Returns data job ID 
+	 * @throws SilverpopConnectorException
+	 */
+	public function importList($mapFile, $dataFile, $email=null, $enc=0) {
+        
+        $params = "<ImportList>
+        <MAP_FILE>{$mapFile}</MAP_FILE>
+        <SOURCE_FILE>{$dataFile}</SOURCE_FILE>\n";
+		
+		if (!empty($email)) {
+			$params .= "\t<EMAIL>{$email}</EMAIL>\n";
+		}
+		if (!empty($enc)) {
+			$params .= "\t<FILE_ENCODING>{$enc}</FILE_ENCODING>\n";
+		}
+	
+		$params .= "</ImportList>";
+
+		$params = new SimpleXmlElement($params);
+		$result = $this->post($params);
+		$jobId = $result->Body->RESULT->JOB_ID;
+		if (!preg_match('/^\d+$/', $jobId)) {
+			$jobId = (int)$jobId;
+		}
+		return $jobId;
+	}
+	/**
+	 * //SK 20140721 ScheduleMailing 
+	 * Schedule a mailing with a mailing template ID and contact source ID. 
+	 * To stay consistent, the time a mailing is scheduled should be passed as a UNIX timestamp (and is converted as per SPOP format)
+	 * When <SCHEDULED> is omitted, invalid or in the past, the mailing is scheduled as per the UI default: 1 hour from the current time
+	 * Use 'false' (explicit comparison) to send immediately.
+	 * When a parent folder is specified to store the sent mailing in (see optParams), this will be created when it doesn't exist
+	 * 
+	 * @param int    $templateId  ID of the mailing template to send
+	 * @param int    $listId      ID of contact list, query or database to send to
+	 * @param string $mailingName Name to assign to the sent mailing
+	 * @param string $bodyType  Type of mailing to send - HTML, AOL, TEXT, ALL or MIXED, all is HTML+AOL+TEXT, default mixed (HTML + TEXT)
+	 * @param int    $scheduledTS Timestamp of when to schedule the mailing, defaults to 1hr from now (same as UI), use false for immediate send
+	 * @param array  $optParams A list of optional parameters as key=>value pairs e.g. <SUBJECT>, <FROM_NAME>, <PARENT_FOLDER_PATH> etc		 
+	 * @param mixed  $suppressions  Optional - A single suppression list ID or array of IDs		
+	 * @param array  $substitutions Optional - An associative array of $name=>$value pairs for substitutions 
+	 * @return int Returns scheduled mailing ID 
+	 * @throws SilverpopConnectorException
+	 */
+	public function scheduleMailing($templateId, $listId, $mailingName, $bodyType="MIXED", $scheduledTS=null, $optParams=array(), $suppressions=null, $substitutions=array()) {
+        if (!preg_match('/^\d+$/', $templateId)) {
+        	$templateId = (int)$templateId;
+        }
+        if (!preg_match('/^\d+$/', $listId)) {
+        	$listId = (int)$listId;
+        }
+        $params = "<ScheduleMailing>
+        <TEMPLATE_ID>{$templateId}</TEMPLATE_ID> 
+        <LIST_ID>{$listId}</LIST_ID>
+        <MAILING_NAME>{$mailingName}</MAILING_NAME>
+		<VISIBILITY>1</VISIBILITY>\n";  //0 private, 1 shared
+		
+		//if (!empty($bodyType)) { 		
+		//validation: remove anything not a letter/underscore, make uppercase.
+		$bodyType = preg_replace("/[^A-Za-z_]/", '', $bodyType); 
+			
+			if ($bodyType == "HTML") {
+		$params .= "\t<SEND_HTML/>\n";
+			} elseif ($bodyType == "TEXT") {
+		$params .= "\t<SEND_TEXT/>\n";	
+			} elseif ($bodyType == "AOL") { 
+		//developer guide 88 - May 2013 
+		$params .= "\t<SEND_AOL/>\n";
+			} elseif ($bodyType == "ALL") { 
+		$params .= "\t<SEND_HTML/>\n";
+		$params .= "\t<SEND_AOL/>\n";
+		$params .= "\t<SEND_TEXT/>\n";			
+			} else {		
+		//catch all - MIXED default		
+		$params .= "\t<SEND_HTML/>\n";	
+		$params .= "\t<SEND_TEXT/>\n";			
+			}
+		//} else { }
+
+		//	<SCHEDULED>MM/DD/YYYY HH:MM:SS AMPM</SCHEDULED> = const self::SPOP_TIME_FORMAT
+		//	e.g. 	<SCHEDULED>12/31/2014 11:00:00 PM</SCHEDULED>
+		$now = date(self::SPOP_TIME_FORMAT);
+		$scheduleUI = strtotime($now.' +1 hour'); 
+		//if (is_null($scheduledTS)) { //no value or null
+		
+		if ($scheduledTS !== false) {
+			if (empty($scheduledTS)) { $scheduledTS  = $scheduleUI; } //invalid value, set to default UI schedule
+			if ($scheduledTS < strtotime($now)) { $scheduledTS  = $scheduleUI; }  //before now, set to default UI schedule
+		}
+		if (!empty($scheduledTS)) { 
+		$params .= "\t<SCHEDULED>".date(self::SPOP_TIME_FORMAT, $scheduledTS)."</SCHEDULED>\n";
+		}
+
+		//optParams as in doc ALL uppercase
+		if (!empty($optParams)) { 
+			foreach ($optParams as $key => $value) {
+		//validation: remove anything not a letter/underscore, make uppercase.
+			$key = preg_replace("/[^A-Za-z_]/", '', $key); 
+		$params .= "\t<{$key}>{$value}</{$key}>\n";
+
+				if ($key == "PARENT_FOLDER_PATH") { 
+		$params .= "\t<CREATE_PARENT_FOLDER/>\n";	//create folder if it doesn't exist	
+				}
+			}
+		}
+
+		if (!empty($suppressions)) {
+		$params .= "\t<SUPPRESSION_LISTS>\n";
+			
+			if (!is_array($suppressions)) { 
+				$suppressions = array($suppressions);	
+			} 
+
+			foreach ($suppressions as $suppressionListId) {
+		//validation: make a number		
+		if (!preg_match('/^\d+$/', $suppressionListId)) {
+			$suppressionListId = (int)$suppressionListId;
+		}				
+		$params .= "\t\t<SUPPRESSION_LIST_ID>{$suppressionListId}</SUPPRESSION_LIST_ID>\n";	
+			}
+		$params .= "\t</SUPPRESSION_LISTS>\n";
+		}
+	
+		if (!empty($substitutions)) {
+		$params .= "\t<SUBSTITUTIONS>\n";
+			foreach ($substitutions as $name => $value) {				
+		$params .= "\t\t<SUBSTITUTION>\n";				
+		$params .= "\t\t\t<NAME>{$name}</NAME>\n";				
+		$params .= "\t\t\t<VALUE>{$value}</VALUE>\n";
+		$params .= "\t\t</SUBSTITUTION>\n";	
+			}
+			$params .= "\t</SUBSTITUTIONS>\n";
+		}
+	
+		$params .= "</ScheduleMailing>";
+
+		$params = new SimpleXmlElement($params);
+		$result = $this->post($params);
+		$mailingId = $result->Body->RESULT->MAILING_ID;
+		if (!preg_match('/^\d+$/', $mailingId)) {
+			$mailingId = (int)$mailingId;
+		}
+		return $mailingId;
+	}
+	/**
+	* //SK 2014-05-05
+	 * Change the value of an existing column
+	 * 
+	 * @param integer $istId   	query, database or contactlist ID
+	 * @param string   $name	column name 
+	 * @param string   $value 	new value for all contacts
+	 * @param integer  $action 	0 = reset to null or 0, 1 = update - sest value, 2 = increment (??)
+	 * @param string   $email 	e-mail address to notify when completed
+	 * @return int Returns the jobId for the Engage Background Job created to set column values. 
+	 * @throws SilverpopConnectorException
+	 *
+	 * //TODO?? define types of $action as constants?
+	 * //Summer guide p 103 
+	 */
+	public function setColumnValue($listId, $name, $value='', $action=1, $email='') {
+                if (!preg_match('/^\d+$/', $listId)) {
+                        $listId = (int)$listId;
+                }
+                $action = (int)$action;
+                if (!in_array($action, array(0,1,2))) {
+                        throw new SilverpopConnectorException("Unrecognized action value: {$action}");
+                }
+		
+               $params = "<SetColumnValue>
+        <LIST_ID>{$listId}</LIST_ID>
+        <COLUMN_NAME>{$name}</COLUMN_NAME>
+        <COLUMN_VALUE>{$value}</COLUMN_VALUE>
+        <ACTION>{$action}</ACTION>\n";
+		if (!empty($email)) {
+			$params .= "\t<EMAIL>{$email}</EMAIL>\n";
+		}
+		$params .= "</SetColumnValue>";
+		$params = new SimpleXmlElement($params);
+		$result = $this->post($params);
+		$jobId = $result->Body->RESULT->JOB_ID;
+		if (!preg_match('/^\d+$/', $jobId)) {
+			$jobId = (int)$jobId;
+		}
+		return $jobId;
+	}
+
 
 	//////////////////////////////////////////////////////////////////////////
 	// PROTECTED ////////////////////////////////////////////////////////////
@@ -814,6 +1151,35 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 			throw new SilverpopConnectorException('Request failed: '.$response->Body->Fault->FaultString);
 		}
 		return $response;
+	}
+
+	/**
+	 * //RJR 20141104 Calculate Query 
+	 * Recalculate a query.
+	 * 
+	 * @param string $queryId  The ID number of the Query to be calculated
+	 * @param string $email    Optional - notification e-mail address
+	 * @return int Returns data job ID 
+	 * @throws SilverpopConnectorException
+	 */
+	public function calculateQuery($queryId, $email=null) {
+        
+        $params = "<CalculateQuery>
+        <QUERY_ID>{$queryId}</QUERY_ID>\n";
+		
+		if (!empty($email)) {
+			$params .= "\t<EMAIL>{$email}</EMAIL>\n";
+		}
+	
+		$params .= "</CalculateQuery>";
+
+		$params = new SimpleXmlElement($params);
+		$result = $this->post($params);
+		$jobId = $result->Body->RESULT->JOB_ID;
+		if (!preg_match('/^\d+$/', $jobId)) {
+			$jobId = (int)$jobId;
+		}
+		return $jobId;
 	}
 
 	/**
