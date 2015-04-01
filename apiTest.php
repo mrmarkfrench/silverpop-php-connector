@@ -1,6 +1,9 @@
 #!/usr/bin/php
 <?php
-require_once __DIR__.'/SilverpopConnector.php';
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+use SilverpopConnector\SilverpopConnector;
 
 echo "Parsing credentials file...\n";
 $credentials = parse_ini_file(__DIR__.'/authData.ini', true);
@@ -50,6 +53,9 @@ if (count($result)) {
 	echo " -- No lists found!\n";
 	die("Exiting");
 }
+
+echo "Setting date format to default MM/dd/yyyy\n";
+SilverpopConnector::getInstance()->setDateFormat('MM/dd/yyyy');
 
 echo "Retrieving list meta data...\n";
 $result = SilverpopConnector::getInstance()->getListMetaData($listId);
@@ -117,6 +123,7 @@ function getJobStatusLoop($jobId, $numAttempts = 600) {
 	//return $isCompleted;
 	return $response;
 }
+
 /*
 echo "Exporting list {$listId}...\n";
 $result = SilverpopConnector::getInstance()->exportList(
