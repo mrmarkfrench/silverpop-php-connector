@@ -19,20 +19,16 @@ use SimpleXmlElement;
 class SilverpopXmlConnector extends SilverpopBaseConnector {
 	protected static $instance = null;
 
-	protected $baseUrl   = null;
-	protected $username  = null;
-	protected $password  = null;
-	protected $sessionId = null;
-
-	// Silverpop date format 
-	const SPOP_DATE_FORMAT	= 'm/d/Y H:i:s'; //2 digits with leading zeroes for month/day/hour/min/sec, 4 digit year
-	const SPOP_TIME_FORMAT	= 'm/d/Y h:i:s A'; //see SPOP_DATE_FORMAT, hours as 00-12 with leading zeroes, added AM/PM 
 	protected $baseUrl    = null;
 	protected $dateFormat = null;
 	protected $username   = null;
 	protected $password   = null;
 	protected $sessionId  = null;
 
+	// Silverpop date format 
+	const SPOP_DATE_FORMAT	= 'm/d/Y H:i:s'; //2 digits with leading zeroes for month/day/hour/min/sec, 4 digit year
+	const SPOP_TIME_FORMAT	= 'm/d/Y h:i:s A'; //see SPOP_DATE_FORMAT, hours as 00-12 with leading zeroes, added AM/PM 
+	
 	// Contact creation source constants
 	const CREATED_FROM_DB_IMPORT   = 0;
 	const CREATED_FROM_MANUAL      = 1;
@@ -1149,6 +1145,12 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @throws SilverpopConnectorException
 	 */
 	protected function checkResponse($xml) {
+		// according to Silverpop's API docs, XML response should always be
+		// UTF-8
+		if (mb_check_encoding($xml, 'UTF-8') === false) {
+				$xml = utf8_encode($xml);
+		}
+
 		$response = new SimpleXmlElement($xml);
 		if (!isset($response->Body)) {
 			throw new SilverpopConnectorException("No <Body> element on response: {$xml}");
