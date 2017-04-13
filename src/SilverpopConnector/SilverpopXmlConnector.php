@@ -721,6 +721,86 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		return $result->Body->RESULT;
 	}
 
+    /**
+     * scheduleMailing
+     *
+     * Schedules an email to the specified list_id ($listId) using the template
+     * $templateID. You can optionally include substitutions that will act on
+     * the template to fill in dynamic bits of data.
+     *
+     * ## Example
+     *
+     * $silvepop->scheduleMailing(123, 456, "Example Mailing with unique name", time() + 60, array(
+     *     'SUBSTITUTIONS' => array(
+     *          array(
+     *              'NAME' => 'FIELD_IN_TEMPLATE',
+     *              'VALUE' => "Dynamic value to replace in template",
+     *          ),
+     *     )
+     * ));
+     *
+     * @param int    $templateId         ID of template upon which to base the mailing.
+     * @param int    $listId             ID of database, query, or contact list to send the template-based mailing.
+     * @param string $mailingName        Name to assign to the generated mailing.
+     * @param int    $scheduledTimestamp When the mailing should be scheduled to send. This must be later than the current timestamp.
+     * @param array  $optionalElements   An array of $key => $value, where $key can be one of SUBJECT, FROM_NAME, FROM_ADDRESS, REPLY_TO, SUBSTITUTIONS
+     * @param bool   $saveToSharedFolder
+     *
+     * @return SimpleXmlElement
+     *
+     * @throws SilverpopConnectorException
+     *
+     */
+    public function scheduleMailing($templateId, $listId, $mailingName, $scheduledTimestamp, $optionalElements = array(), $saveToSharedFolder = 0, $suppressionLists = array()) {
+        if (!preg_match('/^\d+$/', $templateId)) {
+            $listId = (int) $templateId;
+        }
+
+        if (!preg_match('/^\d+$/', $listId)) {
+            $listId = (int) $listId;
+        }
+
+        $scheduled = date("m/d/Y h:i:s A", $scheduledTimestamp);
+
+        $saveToSharedFolder = $saveToSharedFolder ? '1' : '0';
+
+        $suppressionLists = array_map('intval', $suppressionLists);
+
+        $params = "<ScheduleMailing>
+            <TEMPLATE_ID>{$templateId}</TEMPLATE_ID>
+            <LIST_ID>{$listId}</LIST_ID>
+            <MAILING_NAME>{$mailingName}</MAILING_NAME>
+            <SEND_HTML>true</SEND_HTML>
+            <SEND_TEXT>true</SEND_TEXT>
+            <VISIBILITY>{$saveToSharedFolder}</VISIBILITY>
+            <SCHEDULED>{$scheduled}</SCHEDULED>\n";
+
+        foreach ($optionalElements as $key => $value) {
+            $params .= "\t<{$key}>";
+            $params .= "{$value}";
+            $params .= "</{$key}>\n";
+        }
+
+        if (count($suppressionLists)) {
+            $params .= "\t<SUPPRESSION_LISTS>\n";
+            foreach($suppressionLists as $list) {
+                $params .= "\t\t<SUPPRESSION_LIST_ID>{$list}</SUPPRESSION_LIST_ID>\n";
+            }
+            $params .= "\t</SUPPRESSION_LISTS>\n";
+        }
+
+        $params .= "</ScheduleMailing>";
+        $params = new SimpleXmlElement($params);
+        $result = $this->post($params);
+
+        $mailingId = $result->Body->RESULT->MAILING_ID;
+        if (!preg_match('/^\d+$/', $mailingId)) {
+            $mailingId = (int) $mailingId;
+        }
+
+        return $mailingId;
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	// PROTECTED ////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////
