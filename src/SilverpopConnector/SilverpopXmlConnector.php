@@ -251,12 +251,12 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @return array Returns an array of SimpleXmlElement objects, one for each list
 	 * @throws SilverpopConnectorException
 	 */
-	public function getLists($mainFields = array()) {
+	public function getLists($fields = array()) {
 		// Get private lists
 		$params = "<GetLists>
 	<VISIBILITY>0</VISIBILITY>
 	<LIST_TYPE>2</LIST_TYPE>\n";
-        foreach ($mainFields as $key => $value) {
+        foreach ($fields as $key => $value) {
             // e.g. 'INCLUDE_ALL_LISTS' => 'true'
             $key = strtoupper($key); //SK 20140203
             $params .= "\t<{$key}>{$value}</{$key}>\n";
@@ -273,7 +273,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$params = "<GetLists>
 	<VISIBILITY>1</VISIBILITY>
 	<LIST_TYPE>2</LIST_TYPE>\n";
-        foreach ($mainFields as $key => $value) {
+        foreach ($fields as $key => $value) {
             // e.g. 'INCLUDE_ALL_LISTS' => 'true'
             $key = strtoupper($key); //SK 20140203
             $params .= "\t<{$key}>{$value}</{$key}>\n";
