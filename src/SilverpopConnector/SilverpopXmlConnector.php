@@ -247,7 +247,10 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	/**
 	 * Get a set of lists (DBs, queries, and contact lists) defined for this
 	 * account.
-	 * 
+	 *
+	 * @param array $fields An array of $key => $value to add to the query, like
+	 *                      INCLUDE_ALL_LISTS, INCLUDE_TAGS or FOLDER_ID
+	 *
 	 * @return array Returns an array of SimpleXmlElement objects, one for each list
 	 * @throws SilverpopConnectorException
 	 */
