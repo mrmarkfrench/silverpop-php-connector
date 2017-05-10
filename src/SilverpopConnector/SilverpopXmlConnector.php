@@ -6,6 +6,9 @@ use SilverpopConnector\SilverpopBaseConnector;
 use SilverpopConnector\SilverpopRestConnector;
 use SilverpopConnector\SilverpopConnectorException;
 use SimpleXmlElement;
+use SilverpopConnector\Xml\GetMailingTemplate;
+use SilverpopConnector\Xml\GetAggregateTrackingForMailing;
+use SilverpopConnector\Xml\CalculateQuery;
 
 /**
  * This is a basic class for connecting to the Silverpop XML API. If you
@@ -314,6 +317,59 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		}
 		return $modifiedMailings;
 	}
+
+	/**
+	 * Get mailing template.
+	 * 
+	 * @param array $params
+	 * 
+	 * @return SimpleXmlElement
+	 */
+	public function getMailingTemplate($params) {
+		$template = new GetMailingTemplate($params);
+		$params = $template->getXml();
+		$result = $this->post($params);
+		return $template->formatResult($result);
+	}
+
+	/**
+	 * Get aggregate tracking information for a mailing.
+	 * 
+	 * This includes summary data about the number sent etc.
+	 * 
+	 * @param array $params
+	 * @return SimpleXmlElement
+	 */
+	public function getAggregateTrackingForMailing($params) {
+		$template = new GetAggregateTrackingForMailing($params);
+		$params = $template->getXml();
+		$result = $this->post($params);
+		return $template->formatResult($result);
+	}
+
+	/**
+	 * Calculate the Current Contacts for a Query
+	 * 
+	 * This interface supports programmatically calculating the number of
+	 * contacts for a query. A data job is submitted to calculate the query
+	 * and GetJobStatus must be used to determine whether the data job is complete.
+	 * 
+	 * You may only call the Calculate Query data job for a particular query if
+	 * you have not calculated the query size in the last 12 hours.
+	 * 
+	 * @param $params
+	 *  - queryId int ID of the query or list you wish to retrieve.
+	 *  - email string Email to notify on success (optional).
+	 * 
+	 * @return array
+	 */
+	public function calculateQuery($params) {
+		$template = new CalculateQuery($params);
+		$params = $template->getXml();
+		$result = $this->post($params);
+		return $template->formatResult($result);
+	}
+
 	/**
 	 * Get a list of mailings modified within the specified time range.
 	 * 
@@ -710,7 +766,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	}	
 	
 	/**
-	 * //SK 20140205 Send mailing (Code by RR). 
+	 * //SK 20140205 Send mailing (Code by RR).
 	 * 
 	 * @param string	$email	The email address to send the mailing to
 	 * @param int	$autoresponder	The ID of the Autoresponder
