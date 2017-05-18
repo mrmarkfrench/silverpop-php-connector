@@ -9,6 +9,7 @@ use SimpleXmlElement;
 use SilverpopConnector\Xml\GetMailingTemplate;
 use SilverpopConnector\Xml\GetAggregateTrackingForMailing;
 use SilverpopConnector\Xml\CalculateQuery;
+use phpseclib\Net\Sftp;
 
 /**
  * This is a basic class for connecting to the Silverpop XML API. If you
@@ -23,6 +24,25 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	protected static $instance = null;
 
 	protected $baseUrl    = null;
+	protected $sftpUrl    = null;
+
+	/**
+	 * @return null
+	 */
+	public function getSftpUrl() {
+		if (empty($this->sftpUrl)) {
+			return str_replace('https://', '', str_replace('api', 'transfer', $this->baseUrl));
+		}
+		return $this->sftpUrl;
+	}
+
+	/**
+	 * @param null $sftpUrl
+	 */
+	public function setSftpUrl($sftpUrl) {
+		$this->sftpUrl = $sftpUrl;
+	}
+
 	protected $dateFormat = null;
 	protected $username   = null;
 	protected $password   = null;
@@ -1052,4 +1072,31 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		curl_close($ch);
 		return $this->checkResponse($result);
 	}
+
+	/**
+	 * Download a file from the sftp server.
+	 *
+	 * @param string $fileName
+	 * @param string $destination
+	 *   Full path of where to save it to.
+	 *
+	 * Sample code:
+	 *
+	 * $status = $this->silverPop->getJobStatus($this->getJobStatus();
+	 *   if ($status === 'COMPLETE')) {
+	 *     $file = $result->downloadFile();
+	 *   }
+	 *
+	 * @return bool
+	 */
+	public function downloadFile($fileName, $destination) {
+		$sftp = new SFTP($this->getSftpUrl());
+		if (!$sftp->login($this->username, $this->password)) {
+			exit('Login Failed');
+		}
+		$sftp->get('download/' . $fileName, $destination);
+		$sftp->delete('download/' . $fileName);
+		return TRUE;
+	}
+
 }
