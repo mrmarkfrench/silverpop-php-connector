@@ -801,6 +801,104 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
         return $mailingId;
     }
 
+    /**
+     * saveMailing
+     *
+     * Save a new or update an existing email email template to the specified list_id ($listId).
+     *
+     * ## Example
+     *
+     * $silverpop->saveMailing(123, 456, "Example Mailing with unique name", time() + 60, array(
+     *     'SUBSTITUTIONS' => array(
+     *          array(
+     *              'NAME' => 'FIELD_IN_TEMPLATE',
+     *              'VALUE' => "Dynamic value to replace in template",
+     *          ),
+     *     )
+     * ));
+     *
+     * @param string   $mailingName        Name to assign to the mailing template.
+     * @param string   $mailingSubject     Subject to assign to the mailing template.
+     * @param string[] $mailingBodies      Bodies (html, text) to assign to the mailing template.
+     * @param string   $mailingFromName    From name to assign to the mailing template.
+     * @param string   $mailingFromEmail   From email to assign to the mailing template.
+     * @param string   $mailingReplyTo     ReplyTo address to assign to the mailing template.
+     * @param int      $listId             ID of database, query, or contact list being used for the mailing template.
+     * @param int      $templateId         ID of template to update (null for new).
+     * @param bool     $saveToSharedFolder
+     * @param int      $trackingLevel      The tracking level for the messages.
+     * @param array    $clickThroughs      An array of $key => $value, where $key can be one of ClickThroughName, ClickThroughURL, ClickThroughType
+     *
+     * @return SimpleXmlElement
+     *
+     * @throws SilverpopConnectorException
+     *
+     */
+    public function saveMailing($mailingName, $mailingSubject, $mailingBodies, $mailingFromName, $mailingFromEmail, $mailingReplyTo, $listId, $templateId = null, $saveToSharedFolder = 1, $trackingLevel = 4, $clickThroughs = array()) {
+        if (!is_null($templateId) && !preg_match('/^\d+$/', $templateId)) {
+            $listId = (int) $templateId;
+        }
+
+        if (!preg_match('/^\d+$/', $listId)) {
+            $listId = (int) $listId;
+        }
+
+        $saveToSharedFolder = $saveToSharedFolder ? '1' : '0';
+
+        $params = "<SaveMailing>\n";
+        $params .= "<Header>\n";
+        $params .= "\t<MailingName><![CDATA[{$mailingName}]]></MailingName>\n";
+        $params .= "\t<Subject><![CDATA[{$mailingSubject}]]></Subject>\n";
+        $params .= "\t<FromName><![CDATA[{$mailingFromName}]]></FromName>\n";
+        $params .= "\t<FromAddress><![CDATA[{$mailingFromEmail}]]></FromAddress>\n";
+        $params .= "\t<ReplyTo><![CDATA[{$mailingReplyTo}]]></ReplyTo>\n";
+        $params .= "\t<Visibility>{$saveToSharedFolder}</Visibility>\n";
+        $params .= "\t<TrackingLevel>{$trackingLevel}</TrackingLevel>\n";
+        $params .= "\t<Encoding>6</Encoding>\n"; // 6 = unicode (utf8)
+        $params .= "\t<ListID><![CDATA[{$listId}]]></ListID>\n";
+
+        if ($templateId) {
+            $params .= "\t<MailingID>{$templateId}</MailingID>\n"; // 6 = unicode (utf8)
+        }
+        $params .= "</Header>\n";
+
+        $params .= "<MessageBodies>\n";
+        if (!empty($mailingBodies['html'])) {
+            $params .= "\t<HTMLBody><![CDATA[{$mailingBodies['html']}]]></HTMLBody>\n";
+        }
+        if (!empty($mailingBodies['text'])) {
+            $params .= "\t<TextBody><![CDATA[{$mailingBodies['text']}]]></TextBody>\n";
+        }
+        $params .= "</MessageBodies>\n";
+
+        if (!empty($clickThroughs)) {
+            $params .= "<ClickThroughs>\n";
+            foreach ($clickThroughs as $clickThrough) {
+                $params .= "\t<ClickThrough>\n";
+                foreach ($clickThrough as $key => $value) {
+                    if (!is_int($value)) {
+                        $value = "<![CDATA[{$value}]]>";
+                    }
+
+                    $params .= "\t\t<{$key}>{$value}</$key>\n";
+                }
+                $params .= "\t</ClickThrough>\n";
+            }
+            $params .= "</ClickThroughs>\n";
+        }
+
+        $params .= "<ForwardToFriend>\n";
+        $params .= "\t<ForwardType>0</ForwardType>\n";
+        $params .= "</ForwardToFriend>\n";
+
+        $params .= "</SaveMailing>";
+
+        $params = new SimpleXmlElement($params);
+        $result = $this->post($params);
+
+        return $result->Body->RESULT;
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	// PROTECTED ////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////
