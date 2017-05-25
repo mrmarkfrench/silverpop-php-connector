@@ -247,16 +247,24 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	/**
 	 * Get a set of lists (DBs, queries, and contact lists) defined for this
 	 * account.
-	 * 
+	 *
+	 * @param array $fields An array of $key => $value to add to the query, like
+	 *                      INCLUDE_ALL_LISTS, INCLUDE_TAGS or FOLDER_ID
+	 *
 	 * @return array Returns an array of SimpleXmlElement objects, one for each list
 	 * @throws SilverpopConnectorException
 	 */
-	public function getLists() {
+	public function getLists($fields = array()) {
 		// Get private lists
-		$params = '<GetLists>
+		$params = "<GetLists>
 	<VISIBILITY>0</VISIBILITY>
-	<LIST_TYPE>2</LIST_TYPE>
-</GetLists>';
+	<LIST_TYPE>2</LIST_TYPE>\n";
+        foreach ($fields as $key => $value) {
+            // e.g. 'INCLUDE_ALL_LISTS' => 'true'
+            $key = strtoupper($key); //SK 20140203
+            $params .= "\t<{$key}>{$value}</{$key}>\n";
+        }
+        $params .= "\t</GetLists>\n";
 		$params = new SimpleXmlElement($params);
 		$result = $this->post($params);
 		$lists = array();
@@ -265,10 +273,15 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		}
 
 		// Get shared lists
-		$params = '<GetLists>
+		$params = "<GetLists>
 	<VISIBILITY>1</VISIBILITY>
-	<LIST_TYPE>2</LIST_TYPE>
-</GetLists>';
+	<LIST_TYPE>2</LIST_TYPE>\n";
+        foreach ($fields as $key => $value) {
+            // e.g. 'INCLUDE_ALL_LISTS' => 'true'
+            $key = strtoupper($key); //SK 20140203
+            $params .= "\t<{$key}>{$value}</{$key}>\n";
+        }
+        $params .= "\t</GetLists>\n";
 		$params = new SimpleXmlElement($params);
 		$result = $this->post($params);
 		foreach ($result->Body->RESULT->LIST as $list) {
