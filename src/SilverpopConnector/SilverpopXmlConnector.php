@@ -166,6 +166,55 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	}
 
 	/**
+	 * Calculate the Current Contacts for a Query
+	 *
+	 * This interface supports programmatically calculating the number of
+	 * contacts for a query. A data job is submitted to calculate the query
+	 * and GetJobStatus must be used to determine whether the data job is complete.
+	 *
+	 * You may only call the Calculate Query data job for a particular query if
+	 * you have not calculated the query size in the last 12 hours.
+	 *
+	 * @param $params
+	 *  - queryId int ID of the query or list you wish to retrieve.
+	 *  - email string Email to notify on success (optional).
+	 *
+	 * @return array
+	 */
+	public function calculateQuery($params) {
+		$template = new CalculateQuery($params);
+		$params = $template->getXml();
+		$result = $this->post($params);
+		return $template->formatResult($result);
+	}
+
+	/**
+	 * Download a file from the sftp server.
+	 *
+	 * @param string $fileName
+	 * @param string $destination
+	 *   Full path of where to save it to.
+	 *
+	 * Sample code:
+	 *
+	 * $status = $this->silverPop->getJobStatus($this->getJobStatus();
+	 *   if ($status === 'COMPLETE')) {
+	 *     $file = $result->downloadFile();
+	 *   }
+	 *
+	 * @return bool
+	 */
+	public function downloadFile($fileName, $destination) {
+		$sftp = new SFTP($this->getSftpUrl());
+		if (!$sftp->login($this->username, $this->password)) {
+			exit('Login Failed');
+		}
+		$sftp->get('download/' . $fileName, $destination);
+		$sftp->delete('download/' . $fileName);
+		return TRUE;
+	}
+
+	/**
 	 * Initiate a job to export a list from Silverpop. Will return a job ID
 	 * that can be queried to determine when the list is complete, and a file
 	 * path to retrieve it.
@@ -362,29 +411,6 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 */
 	public function getAggregateTrackingForMailing($params) {
 		$template = new GetAggregateTrackingForMailing($params);
-		$params = $template->getXml();
-		$result = $this->post($params);
-		return $template->formatResult($result);
-	}
-
-	/**
-	 * Calculate the Current Contacts for a Query
-	 * 
-	 * This interface supports programmatically calculating the number of
-	 * contacts for a query. A data job is submitted to calculate the query
-	 * and GetJobStatus must be used to determine whether the data job is complete.
-	 * 
-	 * You may only call the Calculate Query data job for a particular query if
-	 * you have not calculated the query size in the last 12 hours.
-	 * 
-	 * @param $params
-	 *  - queryId int ID of the query or list you wish to retrieve.
-	 *  - email string Email to notify on success (optional).
-	 * 
-	 * @return array
-	 */
-	public function calculateQuery($params) {
-		$template = new CalculateQuery($params);
 		$params = $template->getXml();
 		$result = $this->post($params);
 		return $template->formatResult($result);
@@ -1071,32 +1097,6 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$result = curl_exec($ch);
 		curl_close($ch);
 		return $this->checkResponse($result);
-	}
-
-	/**
-	 * Download a file from the sftp server.
-	 *
-	 * @param string $fileName
-	 * @param string $destination
-	 *   Full path of where to save it to.
-	 *
-	 * Sample code:
-	 *
-	 * $status = $this->silverPop->getJobStatus($this->getJobStatus();
-	 *   if ($status === 'COMPLETE')) {
-	 *     $file = $result->downloadFile();
-	 *   }
-	 *
-	 * @return bool
-	 */
-	public function downloadFile($fileName, $destination) {
-		$sftp = new SFTP($this->getSftpUrl());
-		if (!$sftp->login($this->username, $this->password)) {
-			exit('Login Failed');
-		}
-		$sftp->get('download/' . $fileName, $destination);
-		$sftp->delete('download/' . $fileName);
-		return TRUE;
 	}
 
 }
