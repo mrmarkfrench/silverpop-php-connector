@@ -2,7 +2,7 @@
 
 namespace SilverpopConnector;
 
-use SilverpopConnectorException;
+use SilverpopConnector\SilverpopConnectorException;
 
 /**
  * This is a basic class for connecting to the Silverpop API
@@ -21,7 +21,7 @@ abstract class SilverpopBaseConnector {
 	 * single set of credentials, it is recommended that you use the singleton
 	 * getInstance() method instead. Use this constructor if you require
 	 * multiple connector objects for more than one set of credentials.
-	 * 
+	 *
 	 * @param string $baseUrl The base API URL for all requests.
 	 * @return SilverpopConnector
 	 */
@@ -42,14 +42,14 @@ abstract class SilverpopBaseConnector {
 	 * however, you need multiple connectors in order to connect with
 	 * different sets of credentials, you should call the constructor to
 	 * obtain individual SilverpopConnector objects.
-	 * 
+	 *
 	 * Note that this method is implemented with "static" not "self", so
 	 * if you extend the connector to add your own functionality, you can
 	 * continue to use the singleton provided by this method by calling
 	 * YourChildClassName::getInstance(), but you will need to provide a
 	 * "protected static $instance=null;" property in your child class
 	 * for this method to reference.
-	 * 
+	 *
 	 * @return SilverpopConnector
 	 */
 	public static function getInstance() {
@@ -74,7 +74,7 @@ abstract class SilverpopBaseConnector {
 
 	/**
 	 * Set the base URL used for API requests.
-	 * 
+	 *
 	 * @param string $baseUrl
 	 */
 	public function setBaseUrl($baseUrl) {
