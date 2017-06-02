@@ -10,6 +10,7 @@ use SilverpopConnector\Xml\GetMailingTemplate;
 use SilverpopConnector\Xml\GetAggregateTrackingForMailing;
 use SilverpopConnector\Xml\CalculateQuery;
 use phpseclib\Net\Sftp;
+use GuzzleHttp\Client;
 
 /**
  * This is a basic class for connecting to the Silverpop XML API. If you
@@ -126,14 +127,15 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * Performs Silverpop authentication using the supplied credentials,
 	 * or with the cached credentials if none are supplied. Any new credentials
 	 * will be cached for the next request.
-	 * 
-	 * @param string $clientId
-	 * @param string $clientSecret
-	 * @param string $refreshToken
+	 *
+	 * @param string $username
+	 * @param string $password
 	 *
 	 * @throws SilverpopConnectorException
 	 */
-	public function authenticate($username=null, $password=null) {
+	public function authenticate($username = NULL, $password = NULL) {
+		$client = $this->getClient();
+
 		$this->username = empty($username) ? $this->username : $username;
 		$this->password = empty($password) ? $this->password : $password;
 
@@ -145,22 +147,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		</Login>
 	</Body>
 </Envelope>";
-
-		$ch = curl_init();
-		$curlParams = array(
-			CURLOPT_URL            => $this->baseUrl.'/XMLAPI',
-			CURLOPT_FOLLOWLOCATION => 1,
-			CURLOPT_CONNECTTIMEOUT => 10,
-			CURLOPT_MAXREDIRS      => 3,
-			CURLOPT_RETURNTRANSFER => 1,
-			CURLOPT_POST           => 1,
-			CURLOPT_POSTFIELDS     => http_build_query(array('xml'=>$params)),
-			);
-		$set = curl_setopt_array($ch, $curlParams);
-
-		$resultStr = curl_exec($ch);
-		curl_close($ch);
-		$result = $this->checkResponse($resultStr);
+		$response = $client->request('POST', 'XMLAPI', array('form_params' => array('xml' => $params)));
+		$result = $this->checkResponse($response->getBody()->getContents());
 
 		$this->sessionId = $result->Body->RESULT->SESSIONID;
 	}

@@ -18,8 +18,13 @@
         "phpseclib/phpseclib":  "~2.0"
     },
     "autoload": {
-        "psr-0": {
-            "": "src/"
+        "psr-4": {
+            "SilverpopConnector\\": "src/SilverpopConnector"
+        }
+    },
+    "autoload-dev" : {
+        "psr-4" : {
+            "Omnimail\\Silverpop\\Tests\\" : "test/tests"
         }
     }
 }
