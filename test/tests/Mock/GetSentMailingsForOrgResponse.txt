@@ -1,0 +1,39 @@
+<Envelope>
+	<Body>
+	<RESULT>
+		<SUCCESS>TRUE</SUCCESS>
+		<Mailing>
+			<MailingId>7877</MailingId>
+			<ReportId>6655</ReportId>
+			<ScheduledTS>2017-06-02 08:00:00.0</ScheduledTS>
+			<MailingName><![CDATA[My mailing]]></MailingName>
+			<ListName><![CDATA[My mailing list]]></ListName>
+			<ListId>266</ListId>
+			<ParentListId>238</ParentListId>
+			<UserName>Donald Duck</UserName>
+			<SentTS>2017-06-02 08:01:39.0</SentTS>
+			<NumSent>6047</NumSent>
+			<Subject><![CDATA[cool email]]></Subject>
+			<Visibility>Shared</Visibility>
+			<ParentTemplateId>419</ParentTemplateId>
+		</Mailing>
+		<Mailing>
+			<MailingId>737</MailingId>
+			<ReportId>841</ReportId>
+			<ScheduledTS>2017-06-02 08:00:00.0</ScheduledTS>
+			<MailingName><![CDATA[Another riveting email]]></MailingName>
+			<ListName><![CDATA[another list)]]></ListName>
+			<ListId>824</ListId>
+			<ParentListId>238</ParentListId>
+			<UserName>Mickey Mouse</UserName>
+			<SentTS>2017-06-02 08:02:20.0</SentTS>
+			<NumSent>6041</NumSent>
+			<Subject><![CDATA[Whatsup doc]]></Subject>
+			<Visibility>Shared</Visibility>
+			<ParentTemplateId>323</ParentTemplateId>
+		</Mailing>
+	</RESULT>
+
+
+	</Body>
+</Envelope>

@@ -26,6 +26,32 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 
 	protected $baseUrl    = null;
 	protected $sftpUrl    = null;
+	/**
+	 * @var \GuzzleHttp\Client
+	 */
+	protected $client;
+
+	/**
+	 * @return \GuzzleHttp\Client
+	 */
+	public function getClient() {
+		if (!$this->client) {
+			$this->setClient(new Client([
+				// Base URI is used with relative requests
+				'base_uri' => $this->baseUrl,
+				'timeout'  => 10.0,
+				'allow_redirects' => array('max' => 3),
+			]));
+		}
+		return $this->client;
+	}
+
+	/**
+	 * @param \GuzzleHttp\Client $client
+	 */
+	public function setClient(\GuzzleHttp\Client $client) {
+		$this->client = $client;
+	}
 
 	/**
 	 * @return null
@@ -150,7 +176,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		$response = $client->request('POST', 'XMLAPI', array('form_params' => array('xml' => $params)));
 		$result = $this->checkResponse($response->getBody()->getContents());
 
-		$this->sessionId = $result->Body->RESULT->SESSIONID;
+		$this->sessionId = (string) $result->Body->RESULT->SESSIONID;
 	}
 
 	/**
@@ -1044,6 +1070,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	 * @throws SilverpopConnectorException
 	 */
 	protected function post($params, $pathExtension='/XMLAPI', $urlParams='') {
+		$client = $this->getClient();
 		// Wrap the request XML in an "envelope" element
 		$envelopeXml = "<Envelope>\n\t<Body>\n";
 		$params = $params->asXml();
@@ -1054,37 +1081,21 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		}
 		$envelopeXml .= $paramXml;
 		$envelopeXml .= "\n\t</Body>\n</Envelope>";
-		$xmlParams = http_build_query(array('xml'=>$envelopeXml));
+		$xmlParams = array('xml'=>$envelopeXml);
 
 		$curlHeaders = array(
 				'Content-Type: application/x-www-form-urlencoded',
-				'Content-Length: '.strlen($xmlParams),
 				);
 		// Use an oAuth token if there is one
 		if ($accessToken = SilverpopRestConnector::getInstance()->getAccessToken()) {
 			$curlHeaders[] = "Authorization: Bearer {$accessToken}";
-			$url = $this->baseUrl.'/XMLAPI';
+			$url = 'XMLAPI';
 		} else {
 			// No oAuth, use jsessionid to authenticate
-			$url = $this->baseUrl."/XMLAPI;jsessionid={$this->sessionId}";
+			$url = "XMLAPI;jsessionid={$this->sessionId}";
 		}
-
-		$ch = curl_init();
-		$curlParams = array(
-			CURLOPT_URL            => $url,
-			CURLOPT_FOLLOWLOCATION => 1,//true,
-			CURLOPT_POST           => 1,//true,
-			CURLOPT_CONNECTTIMEOUT => 10,
-			CURLOPT_MAXREDIRS      => 3,
-			CURLOPT_POSTFIELDS     => $xmlParams,
-			CURLOPT_RETURNTRANSFER => 1,//true,
-			CURLOPT_HTTPHEADER     => $curlHeaders,
-			);
-		curl_setopt_array($ch, $curlParams);
-
-		$result = curl_exec($ch);
-		curl_close($ch);
-		return $this->checkResponse($result);
+		$response = $client->request('POST', $url, array('form_params' => $xmlParams, 'headers' => $curlHeaders));
+		return $this->checkResponse($response->getBody()->getContents());
 	}
 
 }
