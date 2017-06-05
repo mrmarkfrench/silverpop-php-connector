@@ -9,6 +9,7 @@ use SimpleXmlElement;
 use SilverpopConnector\Xml\GetMailingTemplate;
 use SilverpopConnector\Xml\GetAggregateTrackingForMailing;
 use SilverpopConnector\Xml\CalculateQuery;
+use SilverpopConnector\Xml\GetSentMailingsForOrg;
 use phpseclib\Net\Sftp;
 use GuzzleHttp\Client;
 
@@ -433,14 +434,22 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	/**
 	 * Get a list of mailings modified within the specified time range.
 	 * 
-	 * @param int $lastModifiedStart An integer timestamp
-	 * @param int $lastModifiedEnd   An integer timestamp
-	 * @param string or array	$flags	A single flag or an array of optional flags	
+	 * @param int $dateStart An integer timestamp
+	 * @param int $dateEnd   An integer timestamp
+	 * @param string|array	$flags	A single flag or an array of optional flags
 	 * 
 	 * @return array Returns an array of SimpleXmlElement objects, one for each mailing
 	 * @throws SilverpopConnectorException
 	 */
-	public function getSentMailingsForOrg($dateStart=0, $dateEnd=0, $flags=null) { 
+	public function getSentMailingsForOrg($dateStart=0, $dateEnd=0, $flags=null) {
+
+		$params = array();
+		if (!empty($dateStart)) {
+			$params['startTimestamp'] = $dateStart;
+		}
+		if (!empty($dateEnd)) {
+			$params['endTimestamp'] = $dateEnd;
+		}
 
 		//flags: e.g. EXCLUDE_TEST_MAILINGS, SENT, EXCLUDE_ZERO_SENT
 		if (!empty($flags)) { 
@@ -449,31 +458,14 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 			} 
 			//validation: remove anything not a letter/underscore, make uppercase.
 			foreach($flags as $i=>$flag) {
-				$flag = preg_replace("/[^A-Za-z_]/", '', $flag);
-				$flags[$i] = strtoupper($flag);
+				$flag = preg_replace("/[^A-Za-z]/", '', $flag);
+				$params[$flag] = TRUE;
 			}
 		}
-
-		$params = "<GetSentMailingsForOrg>";
-		if (!empty($dateStart)) $params .= "\n\t<DATE_START>".date('m/d/Y H:i:s', $dateStart)."</DATE_START>"; 
-		if (!empty($dateEnd)) $params .= "\n\t<DATE_END>".date('m/d/Y H:i:s', $dateEnd)."</DATE_END>"; 
-		
-		if (!empty($flags)) { 
-			foreach($flags as $flag) {
-				$params .= "\n\t<{$flag} />";
-			}
-		}
-		
-		$params .= "\n</GetSentMailingsForOrg>";
-
-		$params = new SimpleXmlElement($params);
-
-		$result =$this->post($params);
-		$sentMailings = array();
-		foreach ($result->Body->RESULT->Mailing as $mailing) {
-			$sentMailings[] = $mailing;
-		}
-		return $sentMailings;
+		$template = new GetSentMailingsForOrg($params);
+		$params = $template->getXml();
+		$result = $this->post($params);
+		return $template->formatResult($result);
 	}
 
 	/**
