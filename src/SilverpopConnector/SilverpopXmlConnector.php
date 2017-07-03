@@ -226,6 +226,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		}
 		$sftp->get('download/' . $fileName, $destination);
 		$sftp->delete('download/' . $fileName);
+		fopen($destination . '.complete', 'c');
 		return TRUE;
 	}
 
