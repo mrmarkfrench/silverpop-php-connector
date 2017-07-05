@@ -5,6 +5,7 @@ namespace SilverpopConnector;
 use SilverpopConnector\SilverpopBaseConnector;
 use SilverpopConnector\SilverpopRestConnector;
 use SilverpopConnector\SilverpopConnectorException;
+use SilverpopConnector\Xml\ExportList;
 use SimpleXmlElement;
 use SilverpopConnector\Xml\GetMailingTemplate;
 use SilverpopConnector\Xml\GetAggregateTrackingForMailing;
@@ -267,35 +268,32 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 			'LIST_ID',
 			'MAILING_ID',
 			);
-
-		$params = "<ExportList>
-	<LIST_ID>{$listId}</LIST_ID>
-	<EXPORT_TYPE>{$type}</EXPORT_TYPE>
-	<EXPORT_FORMAT>{$format}</EXPORT_FORMAT>
-	<LIST_DATE_FORMAT>{$this->dateFormat}</LIST_DATE_FORMAT>
-	<ADD_TO_STORED_FILES/>\n";
+		foreach ($columns as $index => $column) {
+			if (in_array($column, $columnsToIgnore)) {
+				unset($columns[$index]);
+			}
+		}
+		$params = array(
+			'listId' => $listId,
+			'exportType' => $type,
+			'exportFormat' =>$format,
+			'listDateFormat' => $this->dateFormat,
+			'columns' => $columns,
+		);
 		if (!empty($startDate)) {
-			$params .= '	<DATE_START>'.date('m/d/Y H:i:s', $startDate)."</DATE_START>\n";
+			$params['startTimestamp'] = $startDate;
 		}
 		if (!empty($endDate)) {
-			$params .= '	<DATE_END>'.date('m/d/Y H:i:s', $endDate)."</DATE_END>\n";
+			$params['endTimestamp'] = $endDate;
 		}
-		if (count($columns)) {
-			$params .= "\t<EXPORT_COLUMNS>\n";
-			foreach ($columns as $column) {
-				if (in_array($column, $columnsToIgnore)) {
-					continue;
-				}
-				$params .= "\t\t<COLUMN>{$column}</COLUMN>\n";
-			}
-			$params .= "\t</EXPORT_COLUMNS>\n";
-		}
-		$params .= '</ExportList>';
-		$params = new SimpleXmlElement($params);
+		$template = new ExportList($params);
+		$params = $template->getXml();
 		$result = $this->post($params);
+		$result = $template->formatResult($result);
+
 		return array(
-			'jobId'    => $result->Body->RESULT->JOB_ID,
-			'filePath' => $result->Body->RESULT->FILE_PATH,
+			'jobId'    => $result->JOB_ID,
+			'filePath' => $result->FILE_PATH,
 			);
 	}
 
