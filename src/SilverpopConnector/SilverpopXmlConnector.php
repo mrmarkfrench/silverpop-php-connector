@@ -2,6 +2,7 @@
 
 namespace SilverpopConnector;
 
+use Omnimail\Exception\Exception;
 use SilverpopConnector\SilverpopBaseConnector;
 use SilverpopConnector\SilverpopRestConnector;
 use SilverpopConnector\SilverpopConnectorException;
@@ -223,7 +224,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 	public function downloadFile($fileName, $destination) {
 		$sftp = new SFTP($this->getSftpUrl());
 		if (!$sftp->login($this->username, $this->password)) {
-			exit('Login Failed');
+			throw new Exception('Login Failed');
 		}
 		$sftp->get('download/' . $fileName, $destination);
 		$sftp->delete('download/' . $fileName);
