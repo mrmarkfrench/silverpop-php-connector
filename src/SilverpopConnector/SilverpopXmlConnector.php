@@ -12,7 +12,7 @@ use SilverpopConnector\Xml\GetMailingTemplate;
 use SilverpopConnector\Xml\GetAggregateTrackingForMailing;
 use SilverpopConnector\Xml\CalculateQuery;
 use SilverpopConnector\Xml\GetSentMailingsForOrg;
-use phpseclib\Net\Sftp;
+use phpseclib\Net\SFTP;
 use GuzzleHttp\Client;
 
 /**
