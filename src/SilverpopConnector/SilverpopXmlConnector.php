@@ -1039,7 +1039,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 				$xml = utf8_encode($xml);
 		}
 
-		$response = new SimpleXmlElement($xml);
+		$response = $this->createXmlObject($xml);
+
 		if (!isset($response->Body)) {
 			throw new SilverpopConnectorException("No <Body> element on response: {$xml}");
 		} elseif (!isset($response->Body->RESULT)) {
@@ -1088,6 +1089,31 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 		}
 		$response = $client->request('POST', $url, array('form_params' => $xmlParams, 'headers' => $curlHeaders));
 		return $this->checkResponse($response->getBody()->getContents());
+	}
+
+	/**
+	* Create an xml object from the xml received.
+	*
+	* Loading simpleXml can fail too quietly. Next iteration could be to
+	* use a different library or to create a specific exception.
+	*
+	* @param string $xml
+	*
+	* @return \SimpleXMLElement
+	*
+	* @throws \SilverpopConnector\SilverpopConnectorException
+	*/
+	protected function createXmlObject($xml) {
+		$use_internal_errors = libxml_use_internal_errors(TRUE);
+		libxml_clear_errors(TRUE);
+
+		$response = simplexml_load_string($xml);
+		if ($response === FALSE) {
+			throw  new \SilverpopConnector\SilverpopConnectorException('invalid xml received: ' . $xml);
+		}
+		libxml_clear_errors(TRUE);
+		libxml_use_internal_errors($use_internal_errors);
+		return $response;
 	}
 
 }
