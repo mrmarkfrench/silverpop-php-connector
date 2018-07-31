@@ -29,7 +29,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	 * Performs Silverpop authentication using the supplied credentials,
 	 * or with the cached credentials if none are supplied. Any new credentials
 	 * will be cached for the next request.
-	 * 
+	 *
 	 * @param string $clientId
 	 * @param string $clientSecret
 	 * @param string $refreshToken
@@ -47,7 +47,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 			'client_secret' => $this->clientSecret,
 			'refresh_token' => $this->refreshToken,
 			);
-		
+
 		$url = $this->baseUrl.'/oauth/token';
 		$ch = curl_init();
 
@@ -77,11 +77,11 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 
 	/**
 	 * Create a Universal Behavior event.
-	 * 
+	 *
 	 * @param int    $typeCode   The event type ID
 	 * @param string $timestamp  The time of the event (Use the date('Y-m-d\TH:i:s.000P') format)
 	 * @param array  $attributes An array of event attributes
-	 * 
+	 *
 	 * @throws InvalidArgumentException
 	 * @throws SilverpopConnectorException
 	 */
@@ -121,7 +121,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	 * attempted on your behalf using cached credentials. Will return either an
 	 * access token or NULL, if none was available and authentication failed
 	 * (due to either bad or missing cached credentials).
-	 * 
+	 *
 	 * @return string
 	 */
 	public function getAccessToken() {
@@ -137,7 +137,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	 * Get the value of when the current access token will expire. If there is
 	 * no current access token, or if an expiry was never set for it, this
 	 * value will be NULL.
-	 * 
+	 *
 	 * @return int Returns a UNIX timestamp
 	 */
 	public function getAccessTokenExpiry() {
@@ -147,7 +147,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	/**
 	 * Checks if the specified method exists on this class and that we are
 	 * authenticated to call it.
-	 * 
+	 *
 	 * @param string $method
 	 * @return bool
 	 */
@@ -159,7 +159,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	 * Set the access token used to authenticate connections. Use this method
 	 * to set a pre-existing access token that has not yet expired, in order to
 	 * avoid re-authenticating.
-	 * 
+	 *
 	 * @param string $accessToken
 	 * @param int    $expiry      Timestamp for when the token expires
 	 */
@@ -176,7 +176,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	 * request. Use this method to provide the necessary authentication
 	 * information if you are supplying a pre-existing access token and want to
 	 * make certain a new one can be generated if it expires.
-	 * 
+	 *
 	 * @param string $clientId
 	 * @param string $clientSecret
 	 * @param string $refreshToken
@@ -195,7 +195,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 	 * Is the current access token expired? If it is expired (or will expire
 	 * within the next 5 seconds), we should request a new token rather than
 	 * using the current one.
-	 * 
+	 *
 	 * @return bool
 	 */
 	protected function tokenExpired() {
@@ -209,7 +209,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 
 	/**
 	 * Send a POST request to the API
-	 * 
+	 *
 	 * @param string $resource The URI for the requested resource (will be prefixed by baseUrl)
 	 * @param array  $params   Parameters to pass to the requested resource
 	 *
