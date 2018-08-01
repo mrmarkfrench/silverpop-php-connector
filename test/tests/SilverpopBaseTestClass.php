@@ -82,5 +82,30 @@ class SilverpopBaseTestClass extends BaseTestClass {
     $this->silverPop->setClient($client);
   }
 
+  /**
+   * Add a mock history collector to the rest request.
+   *
+   * Note this is not intended to be called by the tests when they are finalised
+   * but it is a really useful helper to add when writing tests & trying to determine
+   * the inputs and outputs.
+   *
+   * @param string $body
+   *   Body to be returned from the http request.
+   *
+   * @param array $container
+   *   Reference to array to store Request history in.
+   * @param bool $authenticateFirst
+   * @return array $container
+   */
+  protected function addMockHistoryCollectorToRestConnector(&$container) {
+    $this->silverPop = SilverpopRestConnector::getInstance();
+    $history = Middleware::history($container);
+    $handler = HandlerStack::create();
+    // Add the history middleware to the handler stack.
+    $handler->push($history);
+    $client = new Client(array('handler' => $handler));
+    $this->silverPop->setClient($client);
+  }
+
 }
 
