@@ -1,0 +1,1 @@
+{"meta":{"attributes":{},"generalErrors":[],"fieldErrors":{},"links":[],"nextPageUrl":null},"data":{"location":"http://api4.ibmmarketingcloud.com/rest/gdpr_jobs/512/status","id":512}}

@@ -268,4 +268,75 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
     curl_close($ch);
     return $result;
   }
+
+
+  /**
+   * @param $params
+   */
+  public function gdpr_access($params) {
+    return $this->postCsvData('rest/databases/' . $params['database_id'] . '/gdpr_access', $params);
+  }
+
+  /**
+   * Send a POST request to the API
+   *
+   * @param string $resource The URI for the requested resource (will be prefixed by baseUrl)
+   * @param array  $params   Parameters to pass to the requested resource
+   *
+   * @return string Returns JSON-encoded data
+   * @throws SilverpopConnectorException
+   */
+  protected function postCSVData($resource, $params = []) {
+    // Get the token, and attempt to re-authenticate if needed.
+    $accessToken = $this->getAccessToken();
+    if (empty($accessToken)) {
+      throw new SilverpopConnectorException('Unable to authenticate request.');
+    }
+
+    // If we have a data array then we create the csv in memory & send. Intended for lower volume
+    if (isset($params['data'])) {
+      $filePath = 'php://memory';
+      $body = fopen($filePath, 'w+');
+      foreach ($params['data'] as $row) {
+        fputcsv($body, $row);
+      }
+      rewind($body);
+    }
+    else {
+      $body = fopen($params['csv'], 'r');
+    }
+
+    $headers = [
+      'Authorization' => 'Bearer ' . $accessToken,
+    ];
+
+    $client = $this->getClient();
+    $response = $client->request('POST',
+      $this->baseUrl. '/' . $resource, [
+        'headers' => array_merge($headers, ['content-type' => 'text/csv']),
+        'filename' => 'upload.csv',
+        'body' => $body,
+    ]);
+
+    $content = $response->getBody()->getContents();
+    $contentArray = json_decode($content, TRUE);
+    for ($x = 0; $x <= 5; $x++) {
+      $fetchUrl = $contentArray['data']['location'];
+      $response = $client->request('GET',
+        $fetchUrl,
+        [
+          'headers' => $headers,
+        ]);
+      $content = $response->getBody()->getContents();
+      $body = json_decode($content, 1);
+      if (!isset($body['data']['status'])) {
+        // We have retrieved it.
+        break;
+      }
+      sleep(1);
+    }
+    return $body;
+
+  }
+
 }

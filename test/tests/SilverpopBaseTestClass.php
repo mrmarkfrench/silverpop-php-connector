@@ -83,28 +83,42 @@ class SilverpopBaseTestClass extends BaseTestClass {
   }
 
   /**
-   * Add a mock history collector to the rest request.
-   *
-   * Note this is not intended to be called by the tests when they are finalised
-   * but it is a really useful helper to add when writing tests & trying to determine
-   * the inputs and outputs.
+   * Add a mock history collector to the rest request & set up any responsese.
    *
    * @param string $body
    *   Body to be returned from the http request.
    *
    * @param array $container
    *   Reference to array to store Request history in.
-   * @param bool $authenticateFirst
+   * @param array $responses
+   *
    * @return array $container
    */
-  protected function addMockHistoryCollectorToRestConnector(&$container) {
+  protected function addMockHistoryCollectorToRestConnector(&$container, $baseUrl, $mock = NULL) {
     $this->silverPop = SilverpopRestConnector::getInstance();
     $history = Middleware::history($container);
-    $handler = HandlerStack::create();
+    $handler = HandlerStack::create($mock);
     // Add the history middleware to the handler stack.
     $handler->push($history);
-    $client = new Client(array('handler' => $handler));
+    $client = new Client(['base_uri' => $baseUrl, 'handler' => $handler]);
     $this->silverPop->setClient($client);
+  }
+
+  /**
+   * @param $responses
+   *
+   * @return \GuzzleHttp\Handler\MockHandler|null
+   */
+  protected function getMockHandler($responses) {
+    $mock = NULL;
+    $mocks = [];
+    if (!empty($responses)) {
+      foreach ($responses as $response) {
+        $mocks[] = new Response(200, [], $response);
+      }
+      $mock = new MockHandler($mocks);
+    }
+    return $mock;
   }
 
 }
