@@ -147,7 +147,9 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
    * @return string
    */
   public function getAccessToken() {
-    if (empty($this->accessToken) || $this->tokenExpired()) {
+    if ((empty($this->accessToken) || $this->tokenExpired())
+      && (!empty($this->clientId) && !empty($this->clientSecret) && !empty($this->refreshToken))
+    ) {
       try {
         $this->authenticate();
       } catch (SilverpopConnectorException $sce) {}
