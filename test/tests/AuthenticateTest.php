@@ -16,7 +16,7 @@ class AuthenticateTest extends SilverpopBaseTestClass
   public function testAuthenticateXML()
   {
     $container = array();
-    $this->setUpMockRequest($container, file_get_contents(__DIR__ . '/Mock/AuthenticateResponse.txt'), FALSE);
+    $this->setUpMockXMLRequest($container, file_get_contents(__DIR__ . '/Mock/AuthenticateResponse.txt'), FALSE);
     $this->silverPop->authenticate('Donald Duck', 'Quack');
     $this->assertEquals(1, count($container));
     $transaction = reset($container);

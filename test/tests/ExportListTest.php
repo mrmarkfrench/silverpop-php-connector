@@ -15,7 +15,7 @@ class ExportListTest extends SilverpopBaseTestClass {
   public function testExportList() {
     $container = array();
 
-    $this->setUpMockRequest($container, file_get_contents(__DIR__ . '/Mock/ExportListResponse.txt'));
+    $this->setUpMockXMLRequest($container, file_get_contents(__DIR__ . '/Mock/ExportListResponse.txt'));
     $response = $this->silverPop->exportList(18176618);
 
     $this->assertEquals(1, count($container));
@@ -32,7 +32,7 @@ class ExportListTest extends SilverpopBaseTestClass {
    */
   public function testExportListDifferentParameters() {
     $container = array();
-    $this->setUpMockRequest($container, file_get_contents(__DIR__ . '/Mock/ExportListResponse.txt'));
+    $this->setUpMockXMLRequest($container, file_get_contents(__DIR__ . '/Mock/ExportListResponse.txt'));
     $this->silverPop->exportList(18176618, strtotime('2017-04-05'), strtotime('2017-05-05 17:23:23'), 'OPT_IN', 'TAB', array('ContactID'));
     $transaction = reset($container);
     $this->assertEquals(file_get_contents(__DIR__ . '/Mock/ExportListRequest2.txt', TRUE), strval($transaction['request']->getBody()));

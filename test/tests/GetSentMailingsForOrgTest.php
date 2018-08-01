@@ -14,7 +14,7 @@ use GuzzleHttp\Middleware;
 class GetSentMailingsForOrgTest extends SilverpopBaseTestClass {
   public function testGetMailingTemplate() {
     $container = array();
-    $this->setUpMockRequest($container, file_get_contents(__DIR__ . '/Mock/GetSentMailingsForOrgResponse.txt'));
+    $this->setUpMockXMLRequest($container, file_get_contents(__DIR__ . '/Mock/GetSentMailingsForOrgResponse.txt'));
     $response = $this->silverPop->getSentMailingsForOrg(1495982075, 1496586875, array('SHARED', 'EXCLUDE_TEST_MAILINGS', 'EXCLUDE_ZERO_SENT', 'SENT', 'SENDING'));
 
     $this->assertEquals(1, count($container));

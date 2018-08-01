@@ -5,6 +5,7 @@ namespace SilverpopConnector\Tests;
 use SilverpopConnector\Tests\BaseTestClass;
 use SilverpopConnector\SilverpopConnector;
 use SilverpopConnector\SilverpopRestConnector;
+use SilverpopConnector\SilverpopXmlConnector;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -29,8 +30,8 @@ class SilverpopBaseTestClass extends BaseTestClass {
    * @param bool $authenticateFirst
    * @return array $container
    */
-  protected function setUpMockRequest(&$container, $body, $authenticateFirst = TRUE) {
-    $this->silverPop = SilverpopConnector::getInstance();
+  protected function setUpMockXMLRequest(&$container, $body, $authenticateFirst = TRUE) {
+    $this->silverPop = SilverpopXMLConnector::getInstance();
     $history = Middleware::history($container);
 
     if ($authenticateFirst) {
