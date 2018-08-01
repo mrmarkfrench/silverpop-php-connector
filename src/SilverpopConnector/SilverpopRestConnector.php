@@ -278,6 +278,17 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
   }
 
   /**
+   * GDPR Erasure.
+   *
+   * https://developer.ibm.com/customer-engagement/tutorials/performing-gdpr-right-erasure-wca-apis/
+   *
+   * @param $params
+   */
+  public function gdpr_erasure($params) {
+    return $this->postCsvData('rest/databases/' . $params['database_id'] . '/gdpr_erasure', $params);
+  }
+
+  /**
    * Send a POST request to the API
    *
    * @param string $resource The URI for the requested resource (will be prefixed by baseUrl)
