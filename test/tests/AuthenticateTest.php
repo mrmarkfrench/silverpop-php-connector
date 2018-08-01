@@ -28,20 +28,15 @@ class AuthenticateTest extends SilverpopBaseTestClass
   public function testAuthenticateRest()
   {
     $container = [];
-    try {
-      $this->silverPop = SilverpopConnector::getInstance('api4.ibmmarketingcloud.com');
-      $this->setUpMockRestAuthenticate($container);
-      $this->silverPop->authenticate('specialClientID', 'secretterthanasquirrel', 'onasecretmission');
-    }
-    catch (Exception $e) {
-    }
+    $this->silverPop = SilverpopConnector::getInstance('api4.ibmmarketingcloud.com');
+    $this->setUpMockRestAuthenticate($container);
+    $this->silverPop->authenticate('specialClientID', 'secretterthanasquirrel', 'onasecretmission');
 
     $this->assertEquals(1, count($container));
     $transaction = reset($container);
     $this->assertEquals('POST', $transaction['request']->getMethod());
     $this->assertEquals('grant_type=refresh_token&client_id=specialClientID&client_secret=secretterthanasquirrel&refresh_token=onasecretmission', (string) $transaction['request']->getBody());
     $this->assertEquals(['application/x-www-form-urlencoded'], $transaction['request']->getHeader('Content-Type'));
-    $this->assertEquals(['api4.ibmmarketingcloud.com'], $transaction['request']->getHeader('Host'));
 
     $response = $transaction['response'];
     $this->assertEquals('{"access_token":"a0r1231T2qt-yG03G111oENHRaYSy3M123450xlAQc8wS1","token_type":"bearer","refresh_token":"r-aCk12348BLxkBnUr3Zz_ivg612345ii1aDc11s0CQsS1","expires_in":12222}', (string) $response->getBody());
