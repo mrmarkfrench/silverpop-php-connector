@@ -4,6 +4,7 @@ namespace SilverpopConnector;
 
 use SilverpopConnector\SilverpopBaseConnector;
 use SilverpopConnector\SilverpopConnectorException;
+use GuzzleHttp\Client;
 
 /**
  * This is a basic class for connecting to the Silverpop API
@@ -20,6 +21,40 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
   protected $refreshToken       = null;
   protected $accessToken        = null;
   protected $accessTokenExpires = null;
+
+  /**
+   * @var \GuzzleHttp\Client
+   */
+  protected $client;
+
+  public $container = [];
+
+  /**
+   * @var \GuzzleHttp\Psr7\Request
+   */
+  public $request;
+
+  /**
+   * @return \GuzzleHttp\Client
+   */
+  public function getClient() {
+    if (!$this->client) {
+      $this->setClient(new Client([
+        // Base URI is used with relative requests
+        'base_uri' => $this->baseUrl,
+        'timeout'	=> 10.0,
+        'allow_redirects' => array('max' => 3),
+      ]));
+    }
+    return $this->client;
+  }
+
+  /**
+   * @param \GuzzleHttp\Client $client
+   */
+  public function setClient(\GuzzleHttp\Client $client) {
+    $this->client = $client;
+  }
 
   ///////////////////////////////////////////////////////////////////////////
   // PUBLIC ////////////////////////////////////////////////////////////////
@@ -48,29 +83,16 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
       'refresh_token' => $this->refreshToken,
       );
 
-    $url = $this->baseUrl.'/oauth/token';
-    $ch = curl_init();
-
-    $curlParams = array(
-      CURLOPT_URL            => $url,
-      CURLOPT_FOLLOWLOCATION => 1,
-      CURLOPT_CONNECTTIMEOUT => 10,
-      CURLOPT_MAXREDIRS      => 3,
-      CURLOPT_RETURNTRANSFER => 1,
-      CURLOPT_POST           => 1,
-      CURLOPT_POSTFIELDS     => http_build_query($params),
-      );
-    $set = curl_setopt_array($ch, $curlParams);
-
-    $resultStr = curl_exec($ch);
-    curl_close($ch);
-    $result = json_decode($resultStr, true);
-
+    $client = $this->getClient();
+    $response = $client->request('POST',
+      $this->baseUrl.'/oauth/token', [
+        'form_params' => $params,
+      ]);
+    $result = json_decode($response->getBody(), true);
     if (empty($result['access_token'])) {
-      $msg = empty($result['error_code']) ? $resultStr : $result['error_description'];
+      $msg = empty($result['error_code']) ? json_encode($result) : $result['error_description'];
       throw new SilverpopConnectorException($msg);
     }
-
     $this->accessToken = $result['access_token'];
     $this->accessTokenExpires = time() + $result['expires_in'];
   }

@@ -4,6 +4,7 @@ namespace SilverpopConnector\Tests;
 
 use SilverpopConnector\Tests\BaseTestClass;
 use SilverpopConnector\SilverpopConnector;
+use SilverpopConnector\SilverpopRestConnector;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -54,5 +55,32 @@ class SilverpopBaseTestClass extends BaseTestClass {
       unset($container[0]);
     }
   }
+
+  /**
+   * Set up a mock request, specifying the body of the response.
+   *
+   * @param string $body
+   *   Body to be returned from the http request.
+   *
+   * @param array $container
+   *   Reference to array to store Request history in.
+   * @param bool $authenticateFirst
+   * @return array $container
+   */
+  protected function setUpMockRestAuthenticate(&$container) {
+    $this->silverPop = SilverpopRestConnector::getInstance();
+
+    $mock = new MockHandler([
+      new Response(200, [], trim(file_get_contents(__DIR__ . '/Mock/RestAuthenticateResponse.txt'))),
+    ]);
+
+    $history = Middleware::history($container);
+    $handler = HandlerStack::create($mock);
+    // Add the history middleware to the handler stack.
+    $handler->push($history);
+    $client = new Client(array('handler' => $handler));
+    $this->silverPop->setClient($client);
+  }
+
 }
 
