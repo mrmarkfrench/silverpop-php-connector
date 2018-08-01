@@ -21,7 +21,7 @@ class AuthenticateTest extends SilverpopBaseTestClass
     $this->assertEquals(1, count($container));
     $transaction = reset($container);
     $this->assertEquals('POST', $transaction['request']->getMethod());
-    $this->assertEquals(file_get_contents(__DIR__ . '/Mock/AuthenticateRequest.txt', true), strval($transaction['request']->getBody()));
+    $this->assertEquals(trim(file_get_contents(__DIR__ . '/Mock/AuthenticateRequest.txt', true)), strval($transaction['request']->getBody()));
 
   }
 
