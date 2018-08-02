@@ -273,7 +273,14 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
 
 
   /**
-   * @param $params
+   * GDPR data request.
+   *
+   * @param $params array containing:
+   *  - database_id
+   *  - data -  Array of data to access gdpr information for. e.g
+   *   [['Email', 'email@example.com'],['Email', 'another@example.com']]
+   *
+   * @return array
    */
   public function gdpr_access($params) {
     return $this->postCsvData('rest/databases/' . $params['database_id'] . '/gdpr_access', $params);
@@ -284,7 +291,12 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
    *
    * https://developer.ibm.com/customer-engagement/tutorials/performing-gdpr-right-erasure-wca-apis/
    *
-   * @param $params
+   * @param $params array containing:
+   *  - database_id
+   *  - data -  Array of data to access gdpr information for. e.g
+   *   [['Email', 'email@example.com'],['Email', 'another@example.com']]
+   *
+   * @return array
    */
   public function gdpr_erasure($params) {
     return $this->postCsvData('rest/databases/' . $params['database_id'] . '/gdpr_erasure', $params);
