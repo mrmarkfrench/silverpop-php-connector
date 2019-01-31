@@ -358,8 +358,13 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
         // We have retrieved it.
         break;
       }
+      else {
+        $body['data']['job_id'] = $contentArray['data']['id'];
+        $body['data']['database_id'] = $params['database_id'];
+      }
       sleep(1);
     }
+
     return $body;
 
   }
