@@ -22,6 +22,8 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
   protected $accessToken        = null;
   protected $accessTokenExpires = null;
 
+  protected $retrievalParameters = [];
+
   /**
    * @var \GuzzleHttp\Client
    */
@@ -318,6 +320,51 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
       throw new SilverpopConnectorException('Unable to authenticate request.');
     }
 
+    $headers = [
+      'Authorization' => 'Bearer ' . $accessToken,
+    ];
+    $client = $this->getClient();
+    if (isset($params['retrieval_parameters']['fetch_url'])) {
+      $fetchUrl = $params['retrieval_parameters']['fetch_url'];
+    }
+    else {
+      $fetchUrl = $this->requestEraseJob($resource, $params, $client, $headers);
+    }
+
+    for ($x = 0; $x <= 5; $x++) {
+      $response = $client->request('GET',
+        $fetchUrl,
+        [
+          'headers' => $headers,
+        ]);
+      $content = $response->getBody()->getContents();
+      $body = json_decode($content, 1);
+      if (!isset($body['data']['status'])) {
+        // We have retrieved it.
+        break;
+      }
+      else {
+        $body['data']['database_id'] = $params['database_id'];
+        $body['data']['fetch_url'] = $fetchUrl;
+      }
+      sleep(1);
+    }
+
+    return $body;
+
+  }
+
+  /**
+   * Send out an erase request.
+   *
+   * @param $resource
+   * @param $params
+   * @param $client
+   * @param $headers
+   *
+   * @return array
+   */
+  protected function requestEraseJob($resource, $params, $client, $headers) {
     // If we have a data array then we create the csv in memory & send. Intended for lower volume
     if (isset($params['data'])) {
       $filePath = 'php://memory';
@@ -331,42 +378,16 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
       $body = fopen($params['csv'], 'r');
     }
 
-    $headers = [
-      'Authorization' => 'Bearer ' . $accessToken,
-    ];
-
-    $client = $this->getClient();
     $response = $client->request('POST',
-      $this->baseUrl. '/' . $resource, [
+      $this->baseUrl . '/' . $resource, [
         'headers' => array_merge($headers, ['content-type' => 'text/csv']),
         'filename' => 'upload.csv',
         'body' => $body,
-    ]);
+      ]);
 
     $content = $response->getBody()->getContents();
     $contentArray = json_decode($content, TRUE);
-    for ($x = 0; $x <= 5; $x++) {
-      $fetchUrl = $contentArray['data']['location'];
-      $response = $client->request('GET',
-        $fetchUrl,
-        [
-          'headers' => $headers,
-        ]);
-      $content = $response->getBody()->getContents();
-      $body = json_decode($content, 1);
-      if (!isset($body['data']['status'])) {
-        // We have retrieved it.
-        break;
-      }
-      else {
-        $body['data']['job_id'] = $contentArray['data']['id'];
-        $body['data']['database_id'] = $params['database_id'];
-      }
-      sleep(1);
-    }
-
-    return $body;
-
+    return $contentArray['data']['location'];
   }
 
 }
