@@ -57,7 +57,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   }
 
   /**
-   * @return null
+   * @return string
    */
   public function getSftpUrl() {
     if (empty($this->sftpUrl)) {
@@ -67,7 +67,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   }
 
   /**
-   * @param null $sftpUrl
+   * @param string $sftpUrl
    */
   public function setSftpUrl($sftpUrl) {
     $this->sftpUrl = $sftpUrl;
