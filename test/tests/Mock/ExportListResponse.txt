@@ -1,0 +1,11 @@
+<Envelope>
+<Body>
+		<RESULT>
+<SUCCESS>TRUE</SUCCESS>
+<JOB_ID>101719657</JOB_ID>
+<FILE_PATH>/download/20170509_noCID - All - Jul 5 2017 12-53-25 AM.CSV</FILE_PATH>
+</RESULT>
+
+
+	</Body>
+</Envelope>
