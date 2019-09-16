@@ -14,8 +14,6 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
   protected static $instance = null;
 
   // Authentication data
-  protected $baseUrl            = null;
-  protected $dateFormat         = null;
   protected $clientId           = null;
   protected $clientSecret       = null;
   protected $refreshToken       = null;
@@ -44,7 +42,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
       $this->setClient(new Client([
         // Base URI is used with relative requests
         'base_uri' => $this->baseUrl,
-        'timeout'	=> 10.0,
+        'timeout' => $this->timeout,
         'allow_redirects' => array('max' => 3),
       ]));
     }
