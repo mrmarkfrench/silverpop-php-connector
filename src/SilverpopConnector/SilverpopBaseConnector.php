@@ -11,6 +11,7 @@ use SilverpopConnectorException;
 abstract class SilverpopBaseConnector {
   protected $baseUrl      = null;
   protected $dateFormat   = null;
+  protected $timeout      = null;
 
   ///////////////////////////////////////////////////////////////////////////
   // MAGIC /////////////////////////////////////////////////////////////////
@@ -23,11 +24,13 @@ abstract class SilverpopBaseConnector {
    * multiple connector objects for more than one set of credentials.
    *
    * @param string $baseUrl The base API URL for all requests.
-   * @return SilverpopConnector
+   * @param string $dateFormat Passed through to API requests to specify output format
+   * @param float $timeout Timeout in seconds for API requests
    */
-  public function __construct($baseUrl='http://api.pilot.silverpop.com', $dateFormat='MM/dd/yyyy') {
+  public function __construct($baseUrl='http://api.pilot.silverpop.com', $dateFormat='MM/dd/yyyy', $timeout=10.0) {
     $this->setBaseUrl($baseUrl);
     $this->setDateFormat($dateFormat);
+    $this->setTimeout($timeout);
   }
 
   //////////////////////////////////////////////////////////////////////////
@@ -87,10 +90,19 @@ abstract class SilverpopBaseConnector {
   /**
    * Set the date format.
    *
-   * @param string $baseUrl
+   * @param string $dateFormat
    */
   public function setDateFormat($dateFormat) {
     $this->dateFormat = $dateFormat;
+  }
+
+  /**
+   * Set the timeout.
+   *
+   * @param float $timeout
+   */
+  public function setTimeout($timeout) {
+    $this->timeout = $timeout;
   }
 
   //////////////////////////////////////////////////////////////////////////
