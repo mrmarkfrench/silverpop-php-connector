@@ -98,11 +98,15 @@ class SilverpopConnector {
    * "protected static $instance=null;" property in your child class
    * for this method to reference.
    *
+   * @param string $baseUrl The base API URL for all requests.
+   * @param string $dateFormat Passed through to API requests to specify output format
+   * @param float $timeout Timeout in seconds for API requests
+   *
    * @return SilverpopConnector
    */
-  public static function getInstance($baseUrl='http://api.pilot.silverpop.com') {
+  public static function getInstance($baseUrl='http://api.pilot.silverpop.com', $dateFormat='MM/dd/yyyy', $timeout=10.0) {
     if (static::$instance == null) {
-      static::$instance = new static($baseUrl);
+      static::$instance = new static($baseUrl, $dateFormat, $timeout);
     }
     return static::$instance;
   }
