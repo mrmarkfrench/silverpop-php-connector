@@ -1120,13 +1120,13 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   */
   protected function createXmlObject($xml) {
     $use_internal_errors = libxml_use_internal_errors(TRUE);
-    libxml_clear_errors(TRUE);
+    libxml_clear_errors();
 
     $response = simplexml_load_string($xml);
     if ($response === FALSE) {
       throw  new \SilverpopConnector\SilverpopConnectorException('invalid xml received: ' . $xml);
     }
-    libxml_clear_errors(TRUE);
+    libxml_clear_errors();
     libxml_use_internal_errors($use_internal_errors);
     return $response;
   }
