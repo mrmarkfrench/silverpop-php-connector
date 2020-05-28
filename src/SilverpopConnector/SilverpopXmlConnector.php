@@ -7,6 +7,7 @@ use SilverpopConnector\SilverpopBaseConnector;
 use SilverpopConnector\SilverpopRestConnector;
 use SilverpopConnector\SilverpopConnectorException;
 use SilverpopConnector\Xml\ExportList;
+use SilverpopConnector\Xml\GetQuery;
 use SimpleXmlElement;
 use SilverpopConnector\Xml\GetMailingTemplate;
 use SilverpopConnector\Xml\GetAggregateTrackingForMailing;
@@ -199,6 +200,21 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    */
   public function calculateQuery($params) {
     $template = new CalculateQuery($params);
+    $params = $template->getXml();
+    $result = $this->post($params);
+    return $template->formatResult($result);
+  }
+
+  /**
+   * Get the criteria used for a query list.
+   *
+   * @param $params
+   *  - listId int ID of the list you wish to retrieve.
+   *
+   * @return array
+   */
+  public function getQuery($params) {
+    $template = new getQuery($params);
     $params = $template->getXml();
     $result = $this->post($params);
     return $template->formatResult($result);
@@ -1104,13 +1120,13 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   */
   protected function createXmlObject($xml) {
     $use_internal_errors = libxml_use_internal_errors(TRUE);
-    libxml_clear_errors(TRUE);
+    libxml_clear_errors();
 
     $response = simplexml_load_string($xml);
     if ($response === FALSE) {
       throw  new \SilverpopConnector\SilverpopConnectorException('invalid xml received: ' . $xml);
     }
-    libxml_clear_errors(TRUE);
+    libxml_clear_errors();
     libxml_use_internal_errors($use_internal_errors);
     return $response;
   }

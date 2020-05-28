@@ -1,0 +1,13 @@
+<Envelope>
+<Body>
+		<RESULT>
+<SUCCESS>TRUE</SUCCESS>
+<PARENT_LIST_ID>9644238</PARENT_LIST_ID>
+<QUERY_NAME>Super witty name written by a master of words</QUERY_NAME>
+<VISIBILITY>1</VISIBILITY>
+<QUERY_CRITERIA>&lt;CRITERIA&gt;&lt;EXPRESSION criteria_type="profile"&gt;&lt;CONJUNCTION&gt;AND&lt;/CONJUNCTION&gt;&lt;PARENS&gt;(&lt;/PARENS&gt;&lt;OPERATOR&gt;is in contact list&lt;/OPERATOR&gt;&lt;ID&gt;1234567&lt;/ID&gt;&lt;/EXPRESSION&gt;&lt;EXPRESSION criteria_type="profile"&gt;&lt;CONJUNCTION&gt;AND&lt;/CONJUNCTION&gt;&lt;OPERATOR&gt;is equal to&lt;/OPERATOR&gt;&lt;COLUMN&gt;Segment&lt;/COLUMN&gt;&lt;VALUE&gt;&lt;![CDATA[328]]&gt;&lt;/VALUE&gt;&lt;/EXPRESSION&gt;&lt;EXPRESSION criteria_type="profile"&gt;&lt;CONJUNCTION&gt;AND&lt;/CONJUNCTION&gt;&lt;OPERATOR&gt;is before&lt;/OPERATOR&gt;&lt;COLUMN&gt;latest_donation_date&lt;/COLUMN&gt;&lt;VALUE&gt;&lt;![CDATA[01/01/2019]]&gt;&lt;/VALUE&gt;&lt;PARENS&gt;)&lt;/PARENS&gt;&lt;/EXPRESSION&gt;&lt;EXPRESSION criteria_type="profile"&gt;&lt;CONJUNCTION&gt;OR&lt;/CONJUNCTION&gt;&lt;OPERATOR&gt;is equal to&lt;/OPERATOR&gt;&lt;COLUMN&gt;Email&lt;/COLUMN&gt;&lt;VALUE&gt;&lt;![CDATA[info@examplee.org]]&gt;&lt;/VALUE&gt;&lt;/EXPRESSION&gt;&lt;/CRITERIA&gt;</QUERY_CRITERIA>
+</RESULT>
+
+
+	</Body>
+</Envelope>

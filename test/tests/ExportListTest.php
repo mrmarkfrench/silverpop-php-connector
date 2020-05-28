@@ -13,7 +13,7 @@ use GuzzleHttp\Middleware;
 
 class ExportListTest extends SilverpopBaseTestClass {
   public function testExportList() {
-    $container = array();
+    $container = [];
 
     $this->setUpMockXMLRequest($container, file_get_contents(__DIR__ . '/Mock/ExportListResponse.txt'));
     $response = $this->silverPop->exportList(18176618);
