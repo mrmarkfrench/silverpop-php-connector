@@ -7,6 +7,7 @@ use SilverpopConnector\SilverpopBaseConnector;
 use SilverpopConnector\SilverpopRestConnector;
 use SilverpopConnector\SilverpopConnectorException;
 use SilverpopConnector\Xml\ExportList;
+use SilverpopConnector\Xml\GetQuery;
 use SimpleXmlElement;
 use SilverpopConnector\Xml\GetMailingTemplate;
 use SilverpopConnector\Xml\GetAggregateTrackingForMailing;
@@ -199,6 +200,21 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    */
   public function calculateQuery($params) {
     $template = new CalculateQuery($params);
+    $params = $template->getXml();
+    $result = $this->post($params);
+    return $template->formatResult($result);
+  }
+
+  /**
+   * Get the criteria used for a query list.
+   *
+   * @param $params
+   *  - listId int ID of the list you wish to retrieve.
+   *
+   * @return array
+   */
+  public function getQuery($params) {
+    $template = new getQuery($params);
     $params = $template->getXml();
     $result = $this->post($params);
     return $template->formatResult($result);

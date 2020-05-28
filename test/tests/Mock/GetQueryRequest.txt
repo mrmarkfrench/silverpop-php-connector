@@ -1,0 +1,7 @@
+<Envelope>
+	<Body>
+		<GetQuery><LIST_ID>1234</LIST_ID></GetQuery>
+		
+
+	</Body>
+</Envelope>
