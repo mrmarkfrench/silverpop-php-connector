@@ -1,0 +1,9 @@
+<Envelope>
+<Body>
+		<RESULT>
+<SUCCESS>TRUE</SUCCESS>
+</RESULT>
+
+
+	</Body>
+</Envelope>
