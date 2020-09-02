@@ -35,26 +35,18 @@ class SilverpopBaseTestClass extends BaseTestClass {
     $history = Middleware::history($container);
 
     if ($authenticateFirst) {
-      $mock = new MockHandler([
-        new Response(200, [], file_get_contents(__DIR__ . '/Mock/AuthenticateResponse.txt')),
-        new Response(200, [], $body),
-      ]);
+      $this->authenticate();
     }
-    else {
-      $mock = new MockHandler([
-        new Response(200, [], $body),
-      ]);
-    }
+    $mock = new MockHandler([
+      new Response(200, [], $body),
+      new Response(200, [], file_get_contents(__DIR__ . '/Mock/LogoutResponse.txt')),
+    ]);
+
     $handler = HandlerStack::create($mock);
     // Add the history middleware to the handler stack.
     $handler->push($history);
     $client = new Client(array('handler' => $handler));
     $this->silverPop->setClient($client);
-
-    if ($authenticateFirst) {
-      $this->silverPop->authenticate('Donald Duck', 'Quack');
-      unset($container[0]);
-    }
   }
 
   /**
@@ -120,6 +112,22 @@ class SilverpopBaseTestClass extends BaseTestClass {
       $mock = new MockHandler($mocks);
     }
     return $mock;
+  }
+
+  /**
+   * @param $container
+   * @param $authenticateFirst
+   *
+   * @return mixed
+   */
+  protected function authenticate() {
+    $mock = new MockHandler([
+      new Response(200, [], file_get_contents(__DIR__ . '/Mock/AuthenticateResponse.txt')),
+    ]);
+    $handler = HandlerStack::create($mock);
+    $client = new Client(['handler' => $handler]);
+    $this->silverPop->setClient($client);
+    $this->silverPop->authenticate('Donald Duck', 'Quack');
   }
 
 }

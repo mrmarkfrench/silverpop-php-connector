@@ -35,6 +35,19 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   protected $client;
 
   /**
+   * Logout from silverpop when the class is destroyed.
+   *
+   * This prevents us using up api sessions and running out.
+   *
+   * https://developer.ibm.com/customer-engagement/docs/watson-marketing/ibm-engage-2/watson-campaign-automation-platform/using-oauth/legacy-authentication-method-jsessionid-user-sessions/
+   *
+   * @throws \SilverpopConnector\SilverpopConnectorException
+   */
+  public function __destruct() {
+    $this->logout();
+  }
+
+  /**
    * @return \GuzzleHttp\Client
    */
   public function getClient() {
@@ -163,6 +176,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    * @throws SilverpopConnectorException
    */
   public function authenticate($username = NULL, $password = NULL) {
+    if ($this->sessionId) {
+      return;
+    }
     $client = $this->getClient();
 
     $this->username = empty($username) ? $this->username : $username;
@@ -556,23 +572,11 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    * @throws SilverpopConnectorException
    */
   public function logout() {
-    $params = "<Envelope>\n\t<Body>\n\t\t<Logout/>\n\t</Body></Envelope>";
-
-    $ch = curl_init();
-    $curlParams = array(
-      CURLOPT_URL            => $this->baseUrl.'/XMLAPI',
-      CURLOPT_FOLLOWLOCATION => 1,
-      CURLOPT_CONNECTTIMEOUT => 10,
-      CURLOPT_MAXREDIRS      => 3,
-      CURLOPT_RETURNTRANSFER => 1,
-      CURLOPT_POST           => 1,
-      CURLOPT_POSTFIELDS     => http_build_query(array('xml'=>$params)),
-      );
-    $set = curl_setopt_array($ch, $curlParams);
-
-    $resultStr = curl_exec($ch);
-    curl_close($ch);
-    $result = $this->checkResponse($resultStr);
+    if (!$this->sessionId) {
+      return;
+    }
+    $client = $this->getClient();
+    $response = $this->post(new SimpleXmlElement("<Logout/>"));
 
     $this->sessionId = null;
   }
