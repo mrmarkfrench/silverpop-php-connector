@@ -4,7 +4,7 @@ A connector SDK library for applications integrating with Silverpop, including t
 
 ## Latest Version
 
-The latest version is 1.2.2, and can be found in the version_1 branch. If you'd prefer the latest ongoing development version, it's in the master branch.
+Release versions are available as a tagged release. If you'd prefer the latest ongoing development version, it's in the master branch.
 
 ## Installation
 
