@@ -1,0 +1,22 @@
+<Envelope>
+<Body>
+		<RESULT>
+<SUCCESS>false</SUCCESS>
+</RESULT>
+<Fault>
+<Request/>
+<FaultCode/>
+<FaultString><![CDATA[Session has expired or is invalid]]></FaultString>
+<detail>
+<error>
+<errorid>145</errorid>
+<module/>
+<class>SP.Admin</class>
+<method/>
+</error>
+</detail>
+</Fault>
+
+
+	</Body>
+</Envelope>
