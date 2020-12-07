@@ -23,10 +23,11 @@ class GetQueryTest extends SilverpopBaseTestClass {
     $container = [];
     $this->setUpMockXMLRequest($container, [
       file_get_contents(__DIR__ . '/Mock/SessionTimeOutFail.txt'),
+      file_get_contents(__DIR__ . '/Mock/AuthenticateResponse.txt'),
       file_get_contents(__DIR__ . '/Mock/GetQueryResponse.txt'),
     ]);
     $response = $this->silverPop->getQuery(['listId' => 1234]);
-    $this->assertEquals(1, count($container));
+    $this->assertEquals(3, count($container));
     $transaction = reset($container);
     $this->assertEquals('POST', $transaction['request']->getMethod());
     $this->assertEquals('xml=' . urlencode(file_get_contents(__DIR__ . '/Mock/GetQueryRequest.txt', TRUE)), strval($transaction['request']->getBody()));
