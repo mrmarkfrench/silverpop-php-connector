@@ -1067,7 +1067,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
     } elseif (!isset($response->Body->RESULT->SUCCESS)) {
       throw new SilverpopConnectorException("No <SUCCESS> element on result: {$xml}");
     } elseif (strtolower($response->Body->RESULT->SUCCESS) != 'true') {
-      throw new SilverpopConnectorException('Request failed: '.$response->Body->Fault->FaultString);
+      throw new SilverpopConnectorException('Request failed: '. $response->Body->Fault->FaultString, (int) $response->Body->Fault->detail->error->errorid);
     }
     return $response;
   }
@@ -1107,7 +1107,20 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
       $url = "XMLAPI;jsessionid={$this->sessionId}";
     }
     $response = $client->request('POST', $url, array('form_params' => $xmlParams, 'headers' => $curlHeaders));
-    return $this->checkResponse($response->getBody()->getContents());
+    try {
+      return $this->checkResponse($response->getBody()->getContents());
+    }
+    catch (\SilverpopConnector\SilverpopConnectorException $e) {
+      if ($e->getCode() !== 145) {
+        throw $e;
+      }
+      $this->sessionId = NULL;
+      $this->authenticate();
+      $url = "XMLAPI;jsessionid={$this->sessionId}";
+      $response = $client->request('POST', $url, array('form_params' => $xmlParams, 'headers' => $curlHeaders));
+      return $this->checkResponse($response->getBody()->getContents());
+    }
+
   }
 
   /**
