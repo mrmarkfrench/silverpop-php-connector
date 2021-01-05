@@ -370,6 +370,32 @@ class GetSentMailingsForOrg extends XmlAction {
   /**
    * @var bool
    *
+   * Optional Mailing Type parameter to retrieve mailings cancelled after
+   * some were sent.
+   */
+  protected $sentCancelled;
+
+  /**
+   * @return bool
+   */
+  public function isSentCancelled(): bool {
+    return (bool) $this->sentCancelled;
+  }
+
+  /**
+   * Set whether mails that started and were then cancelled should be retrieved.
+   * @param bool $sentCancelled
+   *
+   * @return GetSentMailingsForOrg
+   */
+  public function setSentCancelled(bool $sentCancelled): GetSentMailingsForOrg {
+    $this->sentCancelled = $sentCancelled;
+    return $this;
+  }
+
+  /**
+   * @var bool
+   *
    * Optional Mailing Type parameter to retrieve Opt-In Autoresponder mailings.
    */
   protected $optinConfirmation;
@@ -501,6 +527,7 @@ class GetSentMailingsForOrg extends XmlAction {
       'SENT' => (bool) $this->isSent(),
       'SENDING' => (bool) $this->isSending(),
       'SCHEDULED' => (bool) $this->isScheduled(),
+      'SENT_CANCELLED' => (bool) $this->isSentCancelled(),
       'OPTIN_CONFIRMATION' => (bool) $this->isOptinConfirmation(),
       'PROFILE_CONFIRMATION' => (bool) $this->isProfileConfirmation(),
       'CAMPAIGN_ACTIVE' => (bool) $this->isCampaignActive(),
