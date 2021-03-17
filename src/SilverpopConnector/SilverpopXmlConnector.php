@@ -187,8 +187,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
     $params = "<Envelope>
   <Body>
     <Login>
-      <USERNAME>{$username}</USERNAME>
-      <PASSWORD>{$password}</PASSWORD>
+      <USERNAME>{$this->username}</USERNAME>
+      <PASSWORD>{$this->password}</PASSWORD>
     </Login>
   </Body>
 </Envelope>";
