@@ -3,9 +3,7 @@
 namespace SilverpopConnector;
 
 use Omnimail\Exception\Exception;
-use SilverpopConnector\SilverpopBaseConnector;
-use SilverpopConnector\SilverpopRestConnector;
-use SilverpopConnector\SilverpopConnectorException;
+use SilverpopConnector\Xml\CreateContactList;
 use SilverpopConnector\Xml\ExportList;
 use SilverpopConnector\Xml\GetQuery;
 use SimpleXmlElement;
@@ -457,6 +455,22 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    */
   public function getAggregateTrackingForMailing($params) {
     $template = new GetAggregateTrackingForMailing($params);
+    $params = $template->getXml();
+    $result = $this->post($params);
+    return $template->formatResult($result);
+  }
+
+  /**
+   * Create a contact list - CreateContactList.
+   *
+   * @param array $params
+   *
+   * @return SimpleXmlElement
+   *
+   * @throws \SilverpopConnector\SilverpopConnectorException
+   */
+  public function createContactList($params): SimpleXmlElement {
+    $template = new CreateContactList($params);
     $params = $template->getXml();
     $result = $this->post($params);
     return $template->formatResult($result);
