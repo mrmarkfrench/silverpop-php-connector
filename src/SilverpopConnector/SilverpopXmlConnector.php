@@ -11,6 +11,7 @@ use SilverpopConnector\Xml\GetMailingTemplate;
 use SilverpopConnector\Xml\GetAggregateTrackingForMailing;
 use SilverpopConnector\Xml\CalculateQuery;
 use SilverpopConnector\Xml\GetSentMailingsForOrg;
+use SilverpopConnector\Xml\AddContactToContactList;
 use phpseclib\Net\SFTP;
 use GuzzleHttp\Client;
 
@@ -471,6 +472,24 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    */
   public function createContactList($params): SimpleXmlElement {
     $template = new CreateContactList($params);
+    $params = $template->getXml();
+    $result = $this->post($params);
+    return $template->formatResult($result);
+  }
+
+  /**
+   * Adds contact/s to an Acoustic Campaign contact list.
+   *
+   * @param array $params
+   *
+   * @see https://developer.goacoustic.com/acoustic-campaign/reference/addcontacttocontactlist
+   *
+   * @return SimpleXmlElement
+   *
+   * @throws \SilverpopConnector\SilverpopConnectorException
+   */
+  public function addContactToContactList($params): bool {
+    $template = new AddContactToContactList($params);
     $params = $template->getXml();
     $result = $this->post($params);
     return $template->formatResult($result);
