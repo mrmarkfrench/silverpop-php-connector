@@ -441,8 +441,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    */
   public function getMailingTemplate($params) {
     $template = new GetMailingTemplate($params);
-    $params = $template->getXml();
-    $result = $this->post($params);
+    $xml = $template->getXml();
+    $result = $this->post($xml);
     return $template->formatResult($result);
   }
 
@@ -456,8 +456,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    */
   public function getAggregateTrackingForMailing($params) {
     $template = new GetAggregateTrackingForMailing($params);
-    $params = $template->getXml();
-    $result = $this->post($params);
+    $xml = $template->getXml();
+    $result = $this->post($xml);
     return $template->formatResult($result);
   }
 
@@ -472,8 +472,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    */
   public function createContactList($params): SimpleXmlElement {
     $template = new CreateContactList($params);
-    $params = $template->getXml();
-    $result = $this->post($params);
+    $xml = $template->getXml();
+    $result = $this->post($xml);
     return $template->formatResult($result);
   }
 
@@ -490,8 +490,8 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    */
   public function addContactToContactList($params): bool {
     $template = new AddContactToContactList($params);
-    $params = $template->getXml();
-    $result = $this->post($params);
+    $xml = $template->getXml();
+    $result = $this->post($xml);
     return $template->formatResult($result);
   }
 
@@ -713,9 +713,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
       $params .= "\t</COLUMN>\n";
     }
     $params .= '</UpdateRecipient>';
-    $params = new SimpleXmlElement($params);
+    $xml = new SimpleXmlElement($params);
 
-    $result = $this->post($params);
+    $result = $this->post($xml);
     $recipientId = $result->Body->RESULT->RecipientId;
     if (!preg_match('/^\d+$/', $recipientId)) {
       $recipientId = (int)$recipientId;
