@@ -689,11 +689,11 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    * @param int   $recipientId The ID of the recipient to update
    * @param array $fields      An associative array of keys and values to update
    * @param array $optParams   An associative array of optional parameters
-   * @params string|null $snoozeDate The date to snooze mails until.
+   *
    * @return SimpleXmlElement
    * @throws SilverpopConnectorException
    */
-  public function updateRecipient($listId, $recipientId, $fields, $optParams= [], $snoozeDate) {
+  public function updateRecipient($listId, $recipientId, $fields, $optParams = []) {
     if (!preg_match('/^\d+$/', $recipientId)) {
       $recipientId = (int)$recipientId;
     }
@@ -705,12 +705,13 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   <RECIPIENT_ID>{$recipientId}</RECIPIENT_ID>
   <LIST_ID>{$listId}</LIST_ID>\n";
     foreach ($optParams as $key => $value) {
-      if ($key == 'snoozeDate') {
-        $params .='<SNOOZE_SETTINGS><SNOOZED>true</SNOOZED><RESUME_SEND_DATE>' . $snoozeDate . '</RESUME_SEND_DATE></SNOOZE_SETTINGS>';
+      if ($key === 'snoozeDate') {
+        $params .='<SNOOZE_SETTINGS><SNOOZED>true</SNOOZED><RESUME_SEND_DATE>' . $value . '</RESUME_SEND_DATE></SNOOZE_SETTINGS>';
         continue;
       }
       $params .= "\t<{$key}>{$value}</{$key}>\n";
-    }```
+    }
+
     foreach ($fields as $key => $value) {
       $params .= "\t<COLUMN>\n";
       $params .= "\t\t<NAME>{$key}</NAME>\n";
