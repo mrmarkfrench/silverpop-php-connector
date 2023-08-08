@@ -705,16 +705,12 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   <RECIPIENT_ID>{$recipientId}</RECIPIENT_ID>
   <LIST_ID>{$listId}</LIST_ID>\n";
     foreach ($optParams as $key => $value) {
+      if ($key == 'snoozeDate') {
+        $params .='<SNOOZE_SETTINGS><SNOOZED>true</SNOOZED><RESUME_SEND_DATE>' . $snoozeDate . '</RESUME_SEND_DATE></SNOOZE_SETTINGS>';
+        continue;
+      }
       $params .= "\t<{$key}>{$value}</{$key}>\n";
-    }
-    if ($snoozeDate) {
-      $params.= '
-        <SNOOZE_SETTINGS>
-          <SNOOZED>true</SNOOZED>
-          <RESUME_SEND_DATE>' . $snoozeDate . '</RESUME_SEND_DATE>
-        </SNOOZE_SETTINGS>
-      ';
-    }
+    }```
     foreach ($fields as $key => $value) {
       $params .= "\t<COLUMN>\n";
       $params .= "\t\t<NAME>{$key}</NAME>\n";
