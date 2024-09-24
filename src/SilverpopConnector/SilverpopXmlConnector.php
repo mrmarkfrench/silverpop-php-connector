@@ -43,7 +43,17 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    * @throws \SilverpopConnector\SilverpopConnectorException
    */
   public function __destruct() {
-    $this->logout();
+    try {
+      $this->logout();
+    }
+    catch (\RuntimeException $e) {
+      // If we get a stream is detached message a logout has already happened.
+      // We log out on destruct to make sure - but we don't want to create noise
+      // if it fails.
+      if (!$e->getMessage() === 'Stream is detached') {
+        throw $e;
+      }
+    }
   }
 
   /**
