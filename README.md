@@ -1,6 +1,6 @@
 # silverpop-php-connector
 
-A connector SDK library for applications integrating with Silverpop, including the Universal Behavior API.
+A connector SDK library for applications integrating with Acoustic, formerly Silverpop, including the Universal Behavior API.
 
 ## Latest Version
 

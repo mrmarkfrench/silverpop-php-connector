@@ -43,7 +43,17 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    * @throws \SilverpopConnector\SilverpopConnectorException
    */
   public function __destruct() {
-    $this->logout();
+    try {
+      $this->logout();
+    }
+    catch (\RuntimeException $e) {
+      // If we get a stream is detached message a logout has already happened.
+      // We log out on destruct to make sure - but we don't want to create noise
+      // if it fails.
+      if (!$e->getMessage() === 'Stream is detached') {
+        throw $e;
+      }
+    }
   }
 
   /**
@@ -263,6 +273,36 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   }
 
   /**
+   * Upload a file from the sftp server.
+   *
+   * @param string $fileName
+   * @param string $source
+   *   Full path of where to save it to.
+   * @param ?string $statusUpdateDirectory
+   *   (Optional) Directory to output a .complete file to.
+   *
+   * @throws \Exception
+   * @return true
+   *
+   */
+  public function uploadFile($fileName, $source, $statusUpdateDirectory = '') {
+    $sftp = new SFTP($this->getSftpUrl());
+    if (!$sftp->login($this->username, $this->password)) {
+      throw new Exception('Login Failed');
+    }
+    $completeFile = !$statusUpdateDirectory ? false : $statusUpdateDirectory . '/' . basename($source) . '.complete';
+    if ($completeFile && file_exists($completeFile)) {
+      unlink($completeFile);
+    }
+    $sftp->delete('upload/' . $fileName);
+    $sftp->put('upload/' . $fileName, $source);
+    if ($statusUpdateDirectory) {
+      fopen($completeFile, 'c');
+    }
+    return TRUE;
+  }
+
+  /**
    * Initiate a job to export a list from Silverpop. Will return a job ID
    * that can be queried to determine when the list is complete, and a file
    * path to retrieve it.
@@ -326,6 +366,37 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
       'jobId'    => $result->JOB_ID,
       'filePath' => $result->FILE_PATH,
       );
+  }
+
+  /**
+   * Instruct Acoustic to import an a csv file.
+   *
+   * This api call initiates an import for files that are already uploaded to
+   * Acoustic. Acoustic only needs the file names as it assumes the path
+   * to be in the uploads directory.
+   *
+   * https://developer.goacoustic.com/acoustic-campaign/reference/importlist
+   *
+   * @param string $xmlFile Name of uploaded xml mapping file eg. 'my_mapping.xml'.
+   *
+   * @param string $csvFile Name of uploaded csv file eg. 'my_mapping.xml'.
+   *
+   * @return []
+   */
+  public function importList($xmlFile, $csvFile) {
+    $params = '
+<ImportList>
+  <MAP_FILE>' . $xmlFile . '</MAP_FILE>
+  <SOURCE_FILE>' . $csvFile . '</SOURCE_FILE>
+</ImportList>';
+    $params = new SimpleXmlElement($params);
+    $result = $this->post($params);
+    return [
+      'result' => $result->Body->RESULT->SUCCESS,
+      'jobId' => $result->Body->RESULT->JOB_ID,
+    ];
+
+    return $result;
   }
 
   /**
