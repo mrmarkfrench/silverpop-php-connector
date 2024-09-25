@@ -369,6 +369,37 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   }
 
   /**
+   * Instruct Acoustic to import an a csv file.
+   *
+   * This api call initiates an import for files that are already uploaded to
+   * Acoustic. Acoustic only needs the file names as it assumes the path
+   * to be in the uploads directory.
+   *
+   * https://developer.goacoustic.com/acoustic-campaign/reference/importlist
+   *
+   * @param string $xmlFile Name of uploaded xml mapping file eg. 'my_mapping.xml'.
+   *
+   * @param string $csvFile Name of uploaded csv file eg. 'my_mapping.xml'.
+   *
+   * @return []
+   */
+  public function importList($xmlFile, $csvFile) {
+    $params = '
+<ImportList>
+  <MAP_FILE>' . $xmlFile . '</MAP_FILE>
+  <SOURCE_FILE>' . $csvFile . '</SOURCE_FILE>
+</ImportList>';
+    $params = new SimpleXmlElement($params);
+    $result = $this->post($params);
+    return [
+      'result' => $result->Body->RESULT->SUCCESS,
+      'jobId' => $result->Body->RESULT->JOB_ID,
+    ];
+
+    return $result;
+  }
+
+  /**
    * Check the status of a data job.
    *
    * @param int $jobId
