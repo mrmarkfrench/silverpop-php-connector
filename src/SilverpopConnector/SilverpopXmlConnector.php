@@ -273,6 +273,36 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   }
 
   /**
+   * Upload a file from the sftp server.
+   *
+   * @param string $fileName
+   * @param string $source
+   *   Full path of where to save it to.
+   * @param ?string $statusUpdateDirectory
+   *   (Optional) Directory to output a .complete file to.
+   *
+   * @throws \Exception
+   * @return true
+   *
+   */
+  public function uploadFile($fileName, $source, $statusUpdateDirectory = '') {
+    $sftp = new SFTP($this->getSftpUrl());
+    if (!$sftp->login($this->username, $this->password)) {
+      throw new Exception('Login Failed');
+    }
+    $completeFile = !$statusUpdateDirectory ? false : $statusUpdateDirectory . '/' . basename($source) . '.complete';
+    if ($completeFile && file_exists($completeFile)) {
+      unlink($completeFile);
+    }
+    $sftp->delete('upload/' . $fileName);
+    $sftp->put('upload/' . $fileName, $source);
+    if ($statusUpdateDirectory) {
+      fopen($completeFile, 'c');
+    }
+    return TRUE;
+  }
+
+  /**
    * Initiate a job to export a list from Silverpop. Will return a job ID
    * that can be queried to determine when the list is complete, and a file
    * path to retrieve it.
