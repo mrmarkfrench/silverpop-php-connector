@@ -132,7 +132,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    * @return int Returns the RecipientId of the new recipient
    * @throws SilverpopConnectorException
    */
-  public function addRecipient($listId, $fields, $upsert=false, $autoreply=false, $createdFrom=self::CREATED_FROM_MANUAL, $lists=array()) {
+  public function addRecipient($listId, $fields, $upsert=false, $autoreply=false, $createdFrom=self::CREATED_FROM_MANUAL, $lists=[], $syncFields = []) {
                 if (!preg_match('/^\d+$/', $listId)) {
                         $listId = (int)$listId;
                 }
@@ -156,6 +156,13 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
         $params .= "\t\t<CONTACT_LIST_ID>{$list}</CONTACT_LIST_ID>\n";
       }
       $params .= "\t</CONTACT_LISTS>\n";
+    }
+    if (count($syncFields)) {
+      $params .= "\t<SYNC_FIELDS>\n";
+      foreach($syncFields as $name => $value) {
+        $params .= "\t\t<SYNC_FIELD>\n\t\t\t<NAME>{$name}</NAME>\n\t\t\t<VALUE>{$value}</VALUE>\n\t\t</SYNC_FIELD>\n";
+      }
+      $params .= "\t</SYNC_FIELDS>\n";
     }
 
     foreach ($fields as $key => $value) {
