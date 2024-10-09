@@ -302,6 +302,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
       unlink($completeFile);
     }
     $sftp->delete('upload/' . $fileName);
+    $source = fopen($source, 'r');
     $sftp->put('upload/' . $fileName, $source);
     if ($statusUpdateDirectory) {
       fopen($completeFile, 'c');
