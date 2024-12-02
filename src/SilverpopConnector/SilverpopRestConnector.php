@@ -271,6 +271,45 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
     return $result;
   }
 
+  /**
+   * Acoustic Rest request.
+   *
+   * This request calls a rest url as documented at https://api-campaign-us-4.goacoustic.com/restdoc/#!/databases
+   * It is a skinny layer that calls the relevant url.
+   * e.g the url is likely to look like
+   *
+   * /databases/{databaseId}/contacts/{contactid}/messages
+   * In this example databases is the category, databaseId is the identifier
+   * and the path will be ['contact', $contactId, 'messages']
+   *
+   * @param int|string $identifier
+   *   The database ID or other, rest call specific, identifier.
+   * @param string $category
+   * @param array $path
+   *
+   * @return array
+   * @throws \GuzzleHttp\Exception\GuzzleException
+   * @throws \SilverpopConnector\SilverpopConnectorException
+   */
+  public function restGet($identifier, string $category, array $path) {
+    // Get the token, and attempt to re-authenticate if needed.
+    $accessToken = $this->getAccessToken();
+    if (empty($accessToken)) {
+      throw new SilverpopConnectorException('Unable to authenticate request.');
+    }
+
+    $headers = [
+      'Authorization' => 'Bearer ' . $accessToken,
+    ];
+    $client = $this->getClient();
+    $response = $client->request('GET',
+      $this->baseUrl . '/rest/' . $category . '/' . $identifier . '/' . implode('/', $path),
+      [
+        'headers' => $headers,
+      ]);
+    $content = $response->getBody()->getContents();
+    return json_decode($content, 1);
+  }
 
   /**
    * GDPR data request.
