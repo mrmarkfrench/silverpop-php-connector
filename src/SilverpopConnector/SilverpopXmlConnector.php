@@ -915,6 +915,105 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   }
 
   /**
+   * WebTrackingExport
+   *
+   * https://developer.goacoustic.com/acoustic-campaign/reference/webtrackingdataexport
+   *
+   * @param array $dates Array of dates, optionally containing one or both of EVENT_DATE_START
+   *   and EVENT_DATE_END
+   * @param array $flags An array of 'flags' - e.g ['INCLUDE_SITE_VISIT_EVENTS', 'MOVE_TO_FTP']
+   *   If no other INCLUDE flag is passed ALL_EVENT_TYPES will be added. Flags differ from parameters
+   *   in that they are a self-closing tag in the xml - eg. <MOVE_TO_FTP />
+   * @param array $parameters  Associative array of optional params, e.g.: ['EMAIL" => 'bob@example.org', 'DATABASE_ID' => 123]
+   * @param array $sites Optional array of sites to include.
+   * @param array $domains Optional array of domains to include.
+   *
+   * @param array $listColumns  An array of recipient columns to include. Appears to require database to be provided in parameters.
+   *
+   * @return SimpleXmlElement
+   * @throws SilverpopConnectorException
+   */
+  public function webTrackingDataExport(array $dates = [], array $flags = [], array $parameters = [], array $sites = [], array $domains = [], array $listColumns = []): SimpleXmlElement {
+
+    //validation: remove anything not a letter/underscore, make uppercase.
+    foreach ($flags as $i => $flag) {
+      $flag = preg_replace("/[^A-Za-z_]/", '', $flag);
+      $flags[$i] = strtoupper($flag);
+    }
+
+    $xml = "<WebTrackingDataExport>";
+    if (!empty($dates)) {
+      foreach ($dates as $dateType => $date) {
+        if ($dateType === 'EVENT_DATE_END' && strlen($date) === 10) {
+          $date .= ' 23:59:59';
+        }
+        $formattedDate = date('m/d/Y H:i:s', strtotime($date));
+        $xml .= "\t<{$dateType}>{$formattedDate}</{$dateType}>\n";
+      }
+    }
+    $hasInclude = FALSE;
+    foreach ($flags as $flag) {
+      if (str_starts_with($flag, 'INCLUDE_')) {
+        $hasInclude = TRUE;
+      }
+      $xml .= "\t<{$flag} />\n";
+    }
+    if (!$hasInclude) {
+      $xml .= "\t<ALL_EVENT_TYPES />\n";
+    }
+
+    foreach ($parameters as $key => $value) {
+      $xml .= "\t<{$key}>{$value}</{$key}>\n";
+    }
+
+    if (!empty($listColumns)) {
+      $xml .= "\t<COLUMNS>\n";
+      foreach ($listColumns as $value) {
+        $xml .= "\t<COLUMN>\n";
+        $xml .= "\t\t<NAME>{$value}</NAME>\n";
+        $xml .= "\t</COLUMN>\n";
+      }
+      $xml .= "\t</COLUMNS>\n";
+    }
+    if (!empty($sites)) {
+      $xml .= "\t<SITES>";
+      foreach ($sites as $site) {
+        $xml .= "<SITE_ID>{$site}</SITE_ID>";
+      }
+      $xml .= "\t</SITES>";
+    }
+
+    if (!empty($domains)) {
+      $xml .= "\t<DOMAINS>";
+      foreach ($domains as $domain) {
+        $xml .= "<DOMAIN_ID>{$domain}</DOMAIN_ID>";
+      }
+      $xml .= "\t</DOMAIN>";
+    }
+
+    $xml .= '</WebTrackingDataExport>';
+
+    $xmlElement = new SimpleXmlElement($xml);
+
+    $result = $this->post($xmlElement);
+
+    $jobId = $filePath = null;
+    if ((string) $result->Body->RESULT->SUCCESS === 'TRUE') {
+      $jobId = $result->Body->RESULT->JOB_ID;
+      if (!preg_match('/^\d+$/', $jobId)) {
+        $jobId = (int) $jobId;
+      }
+      $filePath = $result->Body->RESULT->FILE_PATH;
+    }
+    $msg = $result;
+    $result['msg'] = $msg;
+    $result['jobId'] = $jobId;
+    $result['filePath'] = $filePath;
+
+    return $result;
+  }
+
+  /**
    * //SK 20140130 Fetch data for a recipient in Silverpop.
    *
    * @param int  $listId  The ID of the DB/Contact list
