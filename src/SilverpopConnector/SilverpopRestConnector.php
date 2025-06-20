@@ -334,6 +334,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
    *  - database_id
    *  - data -  Array of data to access gdpr information for. e.g
    *   [['Email', 'email@example.com'],['Email', 'another@example.com']]
+   *  - retry_delay - optional integer for how long to wait between attempts to check for a response, default 1.
    *
    * @return array
    */
@@ -384,7 +385,10 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
         $body['data']['database_id'] = $params['database_id'];
         $body['data']['fetch_url'] = $fetchUrl;
       }
-      sleep(1);
+      if (!isset($params['retry_delay']) || $params['retry_delay'] > 0) {
+        sleep($params['retry_delay'] ?? 1);
+      }
+
     }
 
     return $body;
