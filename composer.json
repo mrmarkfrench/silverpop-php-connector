@@ -3,7 +3,7 @@
     "type": "library",
     "description": "A connector SDK library for applications integrating with Silverpop, including the Silverpop Universal Behavior API",
     "keywords": ["Silverpop"],
-    "version": "1.6.5",
+    "version": "1.6.6",
     "homepage": "https://github.com/mrmarkfrench/silverpop-php-connector",
     "authors": [
         {
