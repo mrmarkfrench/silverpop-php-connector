@@ -215,7 +215,7 @@ class SilverpopConnector {
    * @param float $timeout
    */
   public function setTimeout($timeout) {
-    $this->dateFormat = $timeout;
+    $this->timeout = $timeout;
     $this->restConnector->setTimeout($timeout);
     $this->xmlConnector->setTimeout($timeout);
   }
