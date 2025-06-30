@@ -1323,7 +1323,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
       // No oAuth, use jsessionid to authenticate
       $url = "XMLAPI;jsessionid={$this->sessionId}";
     }
-    $response = $client->request('POST', $url, array('form_params' => $xmlParams, 'headers' => $curlHeaders));
+    $response = $client->request('POST', $url, ['form_params' => $xmlParams, 'headers' => $curlHeaders, 'timeout' => (float) $this->timeout]);
     try {
       return $this->checkResponse($response->getBody()->getContents());
     }
