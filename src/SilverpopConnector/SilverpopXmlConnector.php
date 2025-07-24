@@ -270,6 +270,9 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    */
   public function downloadFile($fileName, $destination) {
     $sftp = new SFTP($this->getSftpUrl());
+    if ($this->timeout) {
+      $sftp->setTimeout($this->timeout);
+    }
     if (!$sftp->login($this->username, $this->password)) {
       throw new Exception('Login Failed');
     }
