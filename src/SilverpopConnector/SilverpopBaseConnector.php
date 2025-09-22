@@ -2,6 +2,10 @@
 
 namespace SilverpopConnector;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use Psr\Http\Message\RequestInterface;
 use SilverpopConnectorException;
 
 /**
@@ -12,6 +16,32 @@ abstract class SilverpopBaseConnector {
   protected $baseUrl      = null;
   protected $dateFormat   = null;
   protected $timeout      = null;
+  // Authentication data
+  protected $clientId;
+  protected $clientSecret;
+  protected $refreshToken;
+  protected $accessToken;
+  protected $accessTokenExpires;
+  private array $container = [];
+
+  /**
+   * @param mixed $refreshToken
+   * @return SilverpopBaseConnector
+   */
+  public function setRefreshToken(?string $refreshToken) {
+    $this->refreshToken = $refreshToken;
+    return $this;
+  }
+
+  public function setClientId(?string $clientId): self{
+    $this->clientId = $clientId;
+    return $this;
+  }
+
+  public function setClientSecret(?string $clientSecret): self {
+    $this->clientSecret = $clientSecret;
+    return $this;
+  }
 
   ///////////////////////////////////////////////////////////////////////////
   // MAGIC /////////////////////////////////////////////////////////////////
@@ -105,7 +135,44 @@ abstract class SilverpopBaseConnector {
     $this->timeout = $timeout;
   }
 
-  //////////////////////////////////////////////////////////////////////////
-  // PROTECTED ////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////
+  /**
+   * @return \GuzzleHttp\Client
+   */
+  public function getClient(): Client {
+    if ($this->client) {
+      return $this->client;
+    }
+    $stack = HandlerStack::create();
+    // Accessible from tests...
+    static $silverpopGuzzleContainer = Null;
+    $silverpopGuzzleContainer = &$this->container;
+    $tokenProvider = new TokenProvider($this->clientId, $this->clientSecret, $this->refreshToken, $this->baseUrl);
+    $history = Middleware::history($this->container);
+    $stack->push($history);
+    // add Authorization header to every request
+    $stack->push(Middleware::mapRequest(function (RequestInterface $req) use ($tokenProvider) {
+      return $req->withHeader('Authorization', 'Bearer ' . $tokenProvider->get());
+    }));
+
+    // retry once on 401 after refreshing token
+    $stack->push(Middleware::retry(function ($retries, $req, $res) use ($tokenProvider) {
+      if ($retries >= 1) {
+        return false;
+      }
+      if ($res && $res->getStatusCode() === 401) {
+        $tokenProvider->refresh();
+        return true;
+      }
+      return false;
+    }));
+
+    $this->setClient(new \GuzzleHttp\Client([
+      'base_uri' => rtrim($this->baseUrl, '/') . '/',
+      'timeout' => $this->timeout,
+      'allow_redirects' => ['max' => 3],
+      'handler' => $stack,
+    ]));
+    return $this->client;
+  }
+
 }
