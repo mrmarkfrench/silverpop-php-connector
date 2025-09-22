@@ -13,7 +13,6 @@ use SilverpopConnector\Xml\CalculateQuery;
 use SilverpopConnector\Xml\GetSentMailingsForOrg;
 use SilverpopConnector\Xml\AddContactToContactList;
 use phpseclib\Net\SFTP;
-use GuzzleHttp\Client;
 
 /**
  * This is a basic class for connecting to the Silverpop XML API. If you
@@ -54,21 +53,6 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
         throw $e;
       }
     }
-  }
-
-  /**
-   * @return \GuzzleHttp\Client
-   */
-  public function getClient() {
-    if (!$this->client) {
-      $this->setClient(new Client([
-        // Base URI is used with relative requests
-        'base_uri' => $this->baseUrl,
-        'timeout' => $this->timeout,
-        'allow_redirects' => array('max' => 3),
-      ]));
-    }
-    return $this->client;
   }
 
   /**
@@ -199,19 +183,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
 
     $this->username = empty($username) ? $this->username : $username;
     $this->password = empty($password) ? $this->password : $password;
-
-    $params = "<Envelope>
-  <Body>
-    <Login>
-      <USERNAME>{$this->username}</USERNAME>
-      <PASSWORD>{$this->password}</PASSWORD>
-    </Login>
-  </Body>
-</Envelope>";
-    $response = $client->request('POST', 'XMLAPI', array('form_params' => array('xml' => $params)));
-    $result = $this->checkResponse($response->getBody()->getContents());
-
-    $this->sessionId = (string) $result->Body->RESULT->SESSIONID;
+    $this->sessionId = TRUE;
   }
 
   /**
@@ -687,12 +659,6 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    * @throws SilverpopConnectorException
    */
   public function logout() {
-    if (!$this->sessionId) {
-      return;
-    }
-    $client = $this->getClient();
-    $response = $this->post(new SimpleXmlElement("<Logout/>"));
-
     $this->sessionId = null;
   }
 
@@ -1318,13 +1284,10 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
     $curlHeaders = array(
         'Content-Type: application/x-www-form-urlencoded',
         );
+    $url = 'XMLAPI';
     // Use an oAuth token if there is one
     if ($accessToken = SilverpopRestConnector::getInstance()->getAccessToken()) {
       $curlHeaders[] = "Authorization: Bearer {$accessToken}";
-      $url = 'XMLAPI';
-    } else {
-      // No oAuth, use jsessionid to authenticate
-      $url = "XMLAPI;jsessionid={$this->sessionId}";
     }
     $response = $client->request('POST', $url, ['form_params' => $xmlParams, 'headers' => $curlHeaders, 'timeout' => (float) $this->timeout]);
     try {
@@ -1334,9 +1297,6 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
       if ($e->getCode() !== 145) {
         throw $e;
       }
-      $this->sessionId = NULL;
-      $this->authenticate();
-      $url = "XMLAPI;jsessionid={$this->sessionId}";
       $response = $client->request('POST', $url, array('form_params' => $xmlParams, 'headers' => $curlHeaders));
       return $this->checkResponse($response->getBody()->getContents());
     }

@@ -13,13 +13,6 @@ use GuzzleHttp\Client;
 class SilverpopRestConnector extends SilverpopBaseConnector {
   protected static $instance = null;
 
-  // Authentication data
-  protected $clientId           = null;
-  protected $clientSecret       = null;
-  protected $refreshToken       = null;
-  protected $accessToken        = null;
-  protected $accessTokenExpires = null;
-
   protected $retrievalParameters = [];
 
   /**
@@ -37,7 +30,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
   /**
    * @return \GuzzleHttp\Client
    */
-  public function getClient() {
+  public function getClient(): Client {
     if (!$this->client) {
       $this->setClient(new Client([
         // Base URI is used with relative requests

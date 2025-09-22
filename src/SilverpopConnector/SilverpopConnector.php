@@ -162,7 +162,6 @@ class SilverpopConnector {
   public function authenticateXml($username=null, $password=null) {
     $this->username = empty($username) ? $this->username : $username;
     $this->password = empty($password) ? $this->password : $password;
-
     $this->xmlConnector = SilverpopXmlConnector::getInstance();
     return $this->xmlConnector->authenticate(
       $this->username,
