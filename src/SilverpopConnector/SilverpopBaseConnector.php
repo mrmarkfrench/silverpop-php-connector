@@ -22,6 +22,8 @@ abstract class SilverpopBaseConnector {
   protected $refreshToken;
   protected $accessToken;
   protected $accessTokenExpires;
+  protected ?string $username;
+  protected ?string $password;
   private array $container = [];
 
   /**
@@ -40,6 +42,16 @@ abstract class SilverpopBaseConnector {
 
   public function setClientSecret(?string $clientSecret): self {
     $this->clientSecret = $clientSecret;
+    return $this;
+  }
+
+  public function setUsername(?string $userName): self {
+    $this->username = $userName;
+    return $this;
+  }
+
+  public function setPassword(?string $password): self {
+    $this->password = $password;
     return $this;
   }
 

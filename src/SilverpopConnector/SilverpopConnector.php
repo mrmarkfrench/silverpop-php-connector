@@ -28,12 +28,12 @@ class SilverpopConnector {
   protected $baseUrl      = null;
   protected $dateFormat   = null;
   protected $timeout      = null;
-  protected $username     = null;
-  protected $password     = null;
-  protected $clientId     = null;
-  protected $clientSecret = null;
-  protected $refreshToken = null;
-  protected $accessToken  = null;
+  protected ?string $username;
+  protected ?string $password;
+  protected ?string $clientId;
+  protected ?string $clientSecret;
+  protected ?string $refreshToken;
+  protected ?string $accessToken;
 
   /**
    * Construct a connector object. If you will be authenticating with only a
@@ -167,6 +167,39 @@ class SilverpopConnector {
     if (!is_int($expiry)) { $expiry = strtotime($expiry); }
 
     return $this->restConnector->setAccessToken($accessToken, $expiry);
+  }
+
+  public function setClientId(?string $clientId): self{
+    $this->restConnector->setClientId($clientId);
+    $this->xmlConnector->setClientId($clientId);
+    return $this;
+  }
+
+  public function setClientSecret(?string $clientSecret): self{
+    $this->restConnector->setClientSecret($clientSecret);
+    $this->xmlConnector->setClientSecret($clientSecret);
+    return $this;
+  }
+
+  public function setRefreshToken(?string $refreshToken): self{
+    $this->restConnector->setRefreshToken($refreshToken);
+    $this->xmlConnector->setRefreshToken($refreshToken);
+    $this->refreshToken = $refreshToken;
+    return $this;
+  }
+
+  public function setUsername(?string $username): SilverpopConnector {
+    $this->restConnector->setUsername($username);
+    $this->xmlConnector->setUsername($username);
+    $this->username = $username;
+    return $this;
+  }
+
+  public function setPassword(?string $password): SilverpopConnector {
+    $this->restConnector->setPassword($password);
+    $this->xmlConnector->setPassword($password);
+    $this->password = $password;
+    return $this;
   }
 
   /**
