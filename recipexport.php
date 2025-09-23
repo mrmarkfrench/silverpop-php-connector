@@ -6,11 +6,11 @@
 /*
 //SK 20140306 added
 	@param notify_email	string	optional e-mail address to notify - in authData.ini
-	@param sftp_config	array	in authData.ini (or sftpData.ini) with 
+	@param sftp_config	array	in authData.ini (or sftpData.ini) with
 	@param sftpUrl	string	url of sftp server
 	@param username	string	optional - username to connect to ftp IF different from API connection
 	@param password	string	optional - password to connect to ftp IF different from API connection
-	@param mail_to	string	required - e-mail address to send exported file to 
+	@param mail_to	string	required - e-mail address to send exported file to
 	@param mail_from	string	e-mail address to send exported file from
 	@param mail_cc	string	optional - e-mail address to send exported file to
 	@param mail_bcc	string	optional - e-mail address to send exported file to
@@ -18,7 +18,7 @@
 	@param sftp	SFTP connection using phpseclib (see GitHub)
 */
 
-//SK Using calendar functions 
+//SK Using calendar functions
 date_default_timezone_set('GMT');
 
 if (!defined('__DIR__')) define('__DIR__', dirname(__FILE__)); //SK 20140304 older php versions
@@ -59,11 +59,10 @@ if (!empty($credentials['silverpop']['username'])) {
 	echo "No XML credentials. Performing combined authentication against REST...\n";
 }
 */
-//SK TODO Cache access token 
+//SK TODO Cache access token
 $accessToken = ""; $expiry = time() + (3 * 60 * 60);
-if (!empty($accessToken)) { 
-	echo "Authenticating to REST API with existing session...\n";	
-	SilverpopConnector::getInstance()->initialiseRest($accessToken, $expiry);
+if (!empty($accessToken)) {
+	echo "Authenticating to REST API with existing session...\n";
 	SilverpopConnector::getInstance()->setAuthParams(
 		$credentials['silverpop']['client_id'],
 		$credentials['silverpop']['client_secret'],
@@ -97,7 +96,7 @@ $flags[] = "SOFT_BOUNCES";
 
 //$flags[] = "ALL_NON_EXPORTED";
 
-//SK 20140228 use details from $sftp_config if they exist, else try credentials 
+//SK 20140228 use details from $sftp_config if they exist, else try credentials
 if (!empty($sftp_config['notify_email'])) {
 	$optParams["EMAIL"] = $sftp_config['notify_email'];
 } elseif (!empty($credentials['silverpop']['notify_email'])) {
@@ -126,7 +125,7 @@ $time = microtime(); $time = explode(' ', $time); $time = $time[1] + $time[0];
 $pageLoadFinish = $time;
 $pageLoadTotal = round(($pageLoadFinish - $pageLoadStart), 4);
 
-echo "\nLoop completed in ".$pageLoadTotal." seconds on ".date('Y-m-d \T H:i:s.000P'); 
+echo "\nLoop completed in ".$pageLoadTotal." seconds on ".date('Y-m-d \T H:i:s.000P');
 
 
 
@@ -161,8 +160,8 @@ function getJobStatusLoop($jobId, $numAttempts = 600) {
 	if ($isCompleted === false) {
 		//$isCompleted = $response;
 		$response .= "\nNot completed. {$attempts} attempts. ";
-	} else { 
-		$response .= "\nJob successfully completed. Looped {$attempts} times. "; 
+	} else {
+		$response .= "\nJob successfully completed. Looped {$attempts} times. ";
 	}
 	//return $isCompleted;
 	return $response;
@@ -170,22 +169,22 @@ function getJobStatusLoop($jobId, $numAttempts = 600) {
 
 
 
-echo "\nDownloading file {$filePath} from SFTP..."; 
+echo "\nDownloading file {$filePath} from SFTP...";
 
 $sftp_url = null; $sftp_user = null; $sftp_pass = null;
-$mail_to = ''; $mail_from = 'no-reply@domain.com'; 
+$mail_to = ''; $mail_from = 'no-reply@domain.com';
 $mail_cc = null; $mail_bcc = null; //only use if specified
 
 
-if (!empty($sftp_config)) { 
+if (!empty($sftp_config)) {
 	if (!empty($sftp_config['sftpUrl']))	$sftp_url = $sftp_config['sftpUrl']; ///www.domain.tld
-	if (!empty($sftp_config['mail_to']))	$mail_to = $sftp_config['mail_to']; 
+	if (!empty($sftp_config['mail_to']))	$mail_to = $sftp_config['mail_to'];
 	if (!empty($sftp_config['mail_from']))	$mail_from = $sftp_config['mail_from']; //maybe use notify_email if it exists
-	if (!empty($sftp_config['mail_cc']))	$mail_cc = $sftp_config['mail_cc']; 
-	if (!empty($sftp_config['mail_bcc']))	$mail_bcc = $sftp_config['mail_bcc'];  
+	if (!empty($sftp_config['mail_cc']))	$mail_cc = $sftp_config['mail_cc'];
+	if (!empty($sftp_config['mail_bcc']))	$mail_bcc = $sftp_config['mail_bcc'];
 
-//If no specific SFTP user/pass found (needs to be an admin account!), Silverpop user and pass used. 
-	if (!empty($sftp_config['username']) && !empty($sftp_config['password'])) { 
+//If no specific SFTP user/pass found (needs to be an admin account!), Silverpop user and pass used.
+	if (!empty($sftp_config['username']) && !empty($sftp_config['password'])) {
 		$sftp_user = $sftp_config['username'];
 		$sftp_pass = $sftp_config['password'];
 	} else {
@@ -212,18 +211,18 @@ if (!empty($filename)) {
 	if (!empty($sftp_dir)) $sftp->chdir($sftp_dir);
 
 	echo "\n--Made sftp connection \n";
-	if (empty($mail_to)) { 
+	if (empty($mail_to)) {
 		//save on server - Check permissions & security
 		//$file = $sftp->get($filename, $filename);
 		//	//get contents of local file and use those
 		//if (!empty($file)) $att_contents = file_get_contents($filename);
-		//$file = $att_contents; 
+		//$file = $att_contents;
 		//if (file_exists($filename)) unlink($filename); //try to remove local file
 		echo "No e-mail address found to send the file to. The file is stored on the SFTP server ({$filepath}).";
 	} else {
 		//save in string
 		$file = $sftp->get($filename);
-		if (empty($file))  { echo $sftp->getSFTPLog(); } 
+		if (empty($file))  { echo $sftp->getSFTPLog(); }
 		//else { echo "\n\n--File found: \n".$file; }
 	}
 
@@ -232,15 +231,15 @@ if (!empty($filename)) {
 
 if (empty($mail_to)) { exit('No file or e-mail address found. End of script.'); }
 
-echo "\nSending file {$filePath} via e-mail..."; 
+echo "\nSending file {$filePath} via e-mail...";
 
 	//SK 20140227 Send e-mail, initialise vars.
-	$headers = array();	$mail_subject = ''; 
-	$mail_message = array(); $mail_body = ''; 
-	
+	$headers = array();	$mail_subject = '';
+	$mail_message = array(); $mail_body = '';
+
 
 	$headers[] = 'From: '.	$mail_from;  //ALWAYS include a FROM address
-	$headers[] = 'Reply-To: '.	$mail_from;  	
+	$headers[] = 'Reply-To: '.	$mail_from;
 	$headers[] = 'Return-Path: '.	$mail_from;
 	if (!empty($mail_cc)) $headers[] = 'CC: '.	$mail_cc;
 	if (!empty($mail_bcc)) $headers[] = 'BCC: '.	$mail_bcc;
@@ -249,53 +248,53 @@ echo "\nSending file {$filePath} via e-mail...";
 
 	$mail_message[] = "Hi";
 	$mail_message[] = "An export file has been created.";
-	
 
-	if (!empty($file)) { 
+
+	if (!empty($file)) {
 		$mail_message[] = "Filename: {$filename}";
 		$mail_message[] = "Please find the file attached.";
 	}
-	
+
 	if (!empty($filepath)) {
 		$sftp_address = str_replace($filename,"",$filepath);
 		$mail_message[] = "The file {$filename}";
 		$mail_message[] = "is stored on the SFTP server at {$sftp_address}";
-		if (!empty($sftp_user)) $mail_message[] = "and can be downloaded by ".$sftp_user; 
+		if (!empty($sftp_user)) $mail_message[] = "and can be downloaded by ".$sftp_user;
 	}
-	
+
 	$mail_message[] = ""; //extra new line
-	
-	
+
+
 	$mail_body = implode("\r\n", $mail_message);
 
 	//SK 20140228 	use contents of remote file
-	echo sendMail($mail_to, $mail_subject, $mail_body, $file, $filename, $headers);	
-	
-	
+	echo sendMail($mail_to, $mail_subject, $mail_body, $file, $filename, $headers);
 
-//SK 20140228 Send an e-mail with an attachment.		
+
+
+//SK 20140228 Send an e-mail with an attachment.
 //Based on http://php.net/manual/en/function.mail.php
-//see also http://stackoverflow.com/questions/9519588/send-php-html-mail-with-attachments	
+//see also http://stackoverflow.com/questions/9519588/send-php-html-mail-with-attachments
     function sendMail($to, $subject, $message, $file_contents='', $file_name = '', $_headers = array()) {
         $rn = "\r\n";
         //SK 20140227 Message is text only so need one boundary identifier for 2x Content-Type
-        $boundary = 'PHP-mixed-'.md5(rand()); 
+        $boundary = 'PHP-mixed-'.md5(rand());
 
 // Headers
 		$headers = 'X-Mailer: PHP v' . phpversion() . $rn; //SK
-        $headers .= 'Mime-Version: 1.0' . $rn;		          
+        $headers .= 'Mime-Version: 1.0' . $rn;
 		//$headers .= 'X-Originating-IP: ' . $_SERVER['SERVER_ADDR'] . $rn; //SK
-		
+
 		if (!empty($_headers)) {
 		$headers .= implode($_headers, $rn); //SK
 		}
-		
-		$headers .= $rn;        
+
+		$headers .= $rn;
         $headers .= 'Content-Type: multipart/mixed; boundary="' . $boundary . '"' . $rn;
-        
-//Body 
+
+//Body
         $msg = "";//$rn;
-        $msg .= '--' . $boundary . $rn; 
+        $msg .= '--' . $boundary . $rn;
         $msg .= 'Content-Type: text/plain; format=flowed; charset="iso-8859-1"' . $rn; //SK
         $msg .= 'Content-Transfer-Encoding: 7bit' . $rn; //SK
         $msg .= $rn . $message . $rn;//$rn . $message . $rn;
@@ -305,22 +304,22 @@ echo "\nSending file {$filePath} via e-mail...";
         if (!empty($file_contents)  && !empty($file_name)) {
 
         	$attachment = chunk_split(base64_encode($file_contents));
- 
+
             	if (!empty($attachment))   {
         $msg .= $rn . '--' . $boundary . $rn;
         $msg .= 'Content-Type: application/zip; name="' . basename($file_name) . '"' . $rn; //SK
-        $msg .= 'Content-Transfer-Encoding: base64' . $rn;            
+        $msg .= 'Content-Transfer-Encoding: base64' . $rn;
         $msg .= 'Content-Disposition: attachment' .$rn;
         $msg .= $rn . $attachment;// . $rn . $rn;
-        		}            
+        		}
         }
-        
+
 // Fin
         $msg .= $rn . '--' . $boundary . '--' . $rn;
 
 // Function mail()
         return mail($to, $subject, $msg, $headers);
-    }	
+    }
 
 
 

@@ -156,19 +156,6 @@ class SilverpopConnector {
       $this->password);
   }
 
-  /**
-   * //SK 20140203 Set accessToken to 1 (expiry now?) for REST so auth params can be set.
-   *
-   * @param string $accessToken
-   * @param int   $expiry  Timestamp for when the token expires, set to now for temporary tokens
-   */
-  public function initialiseRest($accessToken='1', $expiry=null) {
-    if (empty($expiry) || $accessToken == '1') { $expiry = time(); }
-    if (!is_int($expiry)) { $expiry = strtotime($expiry); }
-
-    return $this->restConnector->setAccessToken($accessToken, $expiry);
-  }
-
   public function setClientId(?string $clientId): self{
     $this->restConnector->setClientId($clientId);
     $this->xmlConnector->setClientId($clientId);
