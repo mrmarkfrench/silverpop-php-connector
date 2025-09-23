@@ -80,8 +80,6 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
   }
 
   protected $dateFormat = null;
-  protected $username   = null;
-  protected $password   = null;
   protected $sessionId  = null;
 
   // Contact creation source constants
@@ -687,47 +685,37 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
    * @return mixed Returns TRUE/FALSE to indicate success writing file, or
    *   string content of no output path provided
    */
-  public function streamExportFile($filePath, $output=null) {
-    $params = "<";
+  public function streamExportFile(string $filePath, $output=null) {
+    $client = $this->getClient(); // your Guzzle client; handles OAuth
+    // Original code stripped the "api." subdomain for this endpoint
+    $url = rtrim(str_replace('api.', '', $this->baseUrl), '/') . '/StreamExportFile';
 
-    // Wrap the request XML in an "envelope" element
-    $postParams = http_build_query(array('filePath'=>$filePath));
+    $options = [
+      'form_params'     => ['filePath' => $filePath], // sets x-www-form-urlencoded
+      'headers'         => [
+        'Accept' => '*/*',
+      ],
+    ];
 
-    $curlHeaders = array(
-        'Content-Type: application/x-www-form-urlencoded',
-        'Content-Length: '.strlen($postParams),
-        );
-    // Use an oAuth token if there is one
-    if ($accessToken = SilverpopRestConnector::getInstance()->getAccessToken()) {
-      $curlHeaders[] = "Authorization: Bearer {$accessToken}";
-      $url = $this->baseUrl.'/StreamExportFile';
-    } else {
-      // No oAuth, use jsessionid to authenticate
-      $url = $this->baseUrl."/StreamExportFile;jsessionid={$this->sessionId}";
+    // If $output is provided, stream to file (or resource); otherwise return body.
+    if (!empty($output)) {
+      // Accept either a file path or an open resource
+      $options['sink'] = is_resource($output) ? $output : $output;
     }
-    $url = str_replace('api.', '', $url);
 
-    $ch = curl_init();
-    $curlParams = array(
-      CURLOPT_URL            => $url,
-      CURLOPT_FOLLOWLOCATION => 1,//true,
-      CURLOPT_POST           => 1,//true,
-      CURLOPT_CONNECTTIMEOUT => 10,
-      CURLOPT_MAXREDIRS      => 3,
-      CURLOPT_POSTFIELDS     => $postParams,
-      CURLOPT_HTTPHEADER     => $curlHeaders,
-      );
-    if (empty($output)) {
-      $curlParams[CURLOPT_RETURNTRANSFER] = 1;
-    } else {
-      $fh = fopen($output, 'w');
-      $curlParams[CURLOPT_FILE] = $fh;
+    try {
+      $response = $client->post($url, $options);
+
+      if (!empty($output)) {
+        // Match curl behavior: return boolean-ish success; don't parse body.
+        return $response->getStatusCode() < 400;
+      }
+      return (string) $response->getBody();
     }
-    curl_setopt_array($ch, $curlParams);
-
-    $result = curl_exec($ch);
-    curl_close($ch);
-    return $result;
+    catch (\Throwable $e) {
+      // Network/transport errors: mirror curl semantics
+      return !empty($output) ? false : '';
+    }
   }
 
   /**
@@ -1279,16 +1267,12 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
     }
     $envelopeXml .= $paramXml;
     $envelopeXml .= "\n\t</Body>\n</Envelope>";
-    $xmlParams = array('xml'=>$envelopeXml);
+    $xmlParams = ['xml'=>$envelopeXml];
 
-    $curlHeaders = array(
-        'Content-Type: application/x-www-form-urlencoded',
-        );
+    $curlHeaders = [
+      'Content-Type: application/x-www-form-urlencoded',
+    ];
     $url = 'XMLAPI';
-    // Use an oAuth token if there is one
-    if ($accessToken = SilverpopRestConnector::getInstance()->getAccessToken()) {
-      $curlHeaders[] = "Authorization: Bearer {$accessToken}";
-    }
     $response = $client->request('POST', $url, ['form_params' => $xmlParams, 'headers' => $curlHeaders, 'timeout' => (float) $this->timeout]);
     try {
       return $this->checkResponse($response->getBody()->getContents());

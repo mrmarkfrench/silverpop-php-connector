@@ -63,7 +63,7 @@ if (!empty($credentials['silverpop']['username'])) {
 $accessToken = ""; $expiry = time() + (3 * 60 * 60);
 if (!empty($accessToken)) {
 	echo "Authenticating to REST API with existing session...\n";
-	SilverpopConnector::getInstance()->setAuthParams(
+	SilverpopConnector::getInstance()->authenticate(
 		$credentials['silverpop']['client_id'],
 		$credentials['silverpop']['client_secret'],
 		$credentials['silverpop']['refresh_token']
