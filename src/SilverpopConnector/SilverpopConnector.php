@@ -22,8 +22,8 @@ use SilverpopConnector\SilverpopXmlConnector;
  */
 class SilverpopConnector {
   protected static $instance = null;
-  protected $restConnector   = null;
-  protected $xmlConnector    = null;
+  protected SilverpopRestConnector $restConnector;
+  protected SilverpopXmlConnector $xmlConnector;
 
   protected $baseUrl      = null;
   protected $dateFormat   = null;
@@ -45,7 +45,7 @@ class SilverpopConnector {
    * @param string $dateFormat Passed through to API requests to specify output format
    * @param float $timeout Timeout in seconds for API requests
    */
-  public function __construct($baseUrl='http://api.pilot.silverpop.com', $dateFormat='MM/dd/yyyy', $timeout=10.0) {
+  public function __construct(string $baseUrl = 'http://api.pilot.silverpop.com', $dateFormat='MM/dd/yyyy', $timeout=10.0) {
     $this->restConnector = SilverpopRestConnector::getInstance();
     $this->xmlConnector  = SilverpopXmlConnector::getInstance();
     $this->setBaseUrl($baseUrl);
@@ -130,7 +130,7 @@ class SilverpopConnector {
     $this->refreshToken = empty($refreshToken) ? $this->refreshToken : $refreshToken;
 
     $this->restConnector = SilverpopRestConnector::getInstance();
-    return $this->restConnector->authenticate(
+    $this->restConnector->authenticate(
       $this->clientId,
       $this->clientSecret,
       $this->refreshToken);
@@ -151,7 +151,7 @@ class SilverpopConnector {
     $this->username = empty($username) ? $this->username : $username;
     $this->password = empty($password) ? $this->password : $password;
     $this->xmlConnector = SilverpopXmlConnector::getInstance();
-    return $this->xmlConnector->authenticate(
+    $this->xmlConnector->authenticate(
       $this->username,
       $this->password);
   }

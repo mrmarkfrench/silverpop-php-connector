@@ -87,9 +87,9 @@ abstract class SilverpopBaseConnector {
    * "protected static $instance=null;" property in your child class
    * for this method to reference.
    *
-   * @return SilverpopConnector
+   * @return SilverpopXmlConnector|SilverpopRestConnector
    */
-  public static function getInstance() {
+  public static function getInstance(): SilverpopRestConnector|SilverpopXmlConnector {
     if (static::$instance == null) {
       static::$instance = new static();
     }
