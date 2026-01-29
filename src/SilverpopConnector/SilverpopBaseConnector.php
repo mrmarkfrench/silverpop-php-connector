@@ -27,6 +27,45 @@ abstract class SilverpopBaseConnector {
   private array $container = [];
 
   /**
+   * Headers for outgoing POST.
+   *
+   * @var array
+   */
+  protected array $postHeaders = [];
+
+  public function setPostHeaders(array $postHeaders): SilverpopBaseConnector {
+    $this->postHeaders = $postHeaders;
+    return $this;
+  }
+
+  /**
+   * Options to use via CURL.
+   *
+   * @var array
+   */
+  protected array $curlOptions = [
+      CURLOPT_TCP_KEEPALIVE => 1,
+      CURLOPT_TCP_KEEPIDLE  => 30,
+      CURLOPT_TCP_KEEPINTVL => 15,
+  ];
+
+  public function setCurlOptions(array $curlOptions): SilverpopBaseConnector {
+    $this->curlOptions = $curlOptions;
+    return $this;
+  }
+
+  /**
+   * Checks if the specified method exists on this class and that we are
+   * authenticated to call it.
+   *
+   * @param string $method
+   * @return bool
+   */
+  public function methodAvailable($method) {
+    return method_exists($this, $method);
+  }
+
+  /**
    * @param mixed $refreshToken
    * @return SilverpopBaseConnector
    */

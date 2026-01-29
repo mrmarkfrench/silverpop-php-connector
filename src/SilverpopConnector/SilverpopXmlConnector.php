@@ -1269,11 +1269,19 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
     $envelopeXml .= "\n\t</Body>\n</Envelope>";
     $xmlParams = ['xml'=>$envelopeXml];
 
-    $curlHeaders = [
-      'Content-Type: application/x-www-form-urlencoded',
+    $headers = $this->postHeaders + [
+      'Content-Type' => 'application/x-www-form-urlencoded',
     ];
+    $options = [
+      'form_params' => $xmlParams,
+      'headers'     => $headers,
+      'timeout'     => (float) $this->timeout,
+      'connect_timeout' => 10,
+      'curl' => $this->curlOptions,
+    ];
+
     $url = 'XMLAPI';
-    $response = $client->request('POST', $url, ['form_params' => $xmlParams, 'headers' => $curlHeaders, 'timeout' => (float) $this->timeout]);
+    $response = $client->request('POST', $url, $options);
     try {
       return $this->checkResponse($response->getBody()->getContents());
     }
@@ -1281,7 +1289,7 @@ class SilverpopXmlConnector extends SilverpopBaseConnector {
       if ($e->getCode() !== 145) {
         throw $e;
       }
-      $response = $client->request('POST', $url, array('form_params' => $xmlParams, 'headers' => $curlHeaders));
+      $response = $client->request('POST', $url, $options);
       return $this->checkResponse($response->getBody()->getContents());
     }
 
