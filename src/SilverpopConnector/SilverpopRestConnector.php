@@ -97,17 +97,6 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
   }
 
   /**
-   * Checks if the specified method exists on this class and that we are
-   * authenticated to call it.
-   *
-   * @param string $method
-   * @return bool
-   */
-  public function methodAvailable($method) {
-    return method_exists($this, $method);
-  }
-
-  /**
    * Send a POST request to the API
    *
    * @param string $resource The URI for the requested resource (will be prefixed by baseUrl)

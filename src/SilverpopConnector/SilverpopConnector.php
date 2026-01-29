@@ -34,7 +34,8 @@ class SilverpopConnector {
   protected ?string $clientSecret;
   protected ?string $refreshToken;
   protected ?string $accessToken;
-
+  protected array $postHeaders = [];
+  protected array $curlOptions = [];
   /**
    * Construct a connector object. If you will be authenticating with only a
    * single set of credentials, it is recommended that you use the singleton
@@ -225,6 +226,28 @@ class SilverpopConnector {
     $this->timeout = $timeout;
     $this->restConnector->setTimeout($timeout);
     $this->xmlConnector->setTimeout($timeout);
+  }
+
+  /**
+   * Set headers.
+   *
+   * @param array $headers
+   */
+  public function setPostHeaders(array $headers) {
+    $this->postHeaders = $headers;
+    $this->restConnector->setPostHeaders($headers);
+    $this->xmlConnector->setPostHeaders($headers);
+  }
+
+  /**
+   * Set curl options.
+   *
+   * @param array $curlOptions
+   */
+  public function setCurlOptions(array $curlOptions) {
+    $this->curlOptions = $curlOptions;
+    $this->restConnector->setCurlOptions($curlOptions);
+    $this->xmlConnector->setCurlOptions($curlOptions);
   }
 
 }
