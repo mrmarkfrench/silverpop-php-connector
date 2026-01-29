@@ -3,7 +3,7 @@
     "type": "library",
     "description": "A connector SDK library for applications integrating with Silverpop, including the Silverpop Universal Behavior API",
     "keywords": ["Silverpop", "Acoustic"],
-    "version": "1.6.11",
+    "version": "1.6.12",
     "homepage": "https://github.com/mrmarkfrench/silverpop-php-connector",
     "authors": [
         {
