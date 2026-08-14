@@ -22,7 +22,6 @@ class RestGetTest extends SilverpopBaseTestClass {
     $connector->setBaseUrl($baseUrl);
     $container = [];
     $mock = $this->getMockHandler([
-      trim(file_get_contents(__DIR__ . '/Mock/RestAuthenticateResponse.txt')),
       trim(file_get_contents(__DIR__ . '/Mock/RestGetResponse.txt')),
     ]);
     $this->addMockHistoryCollectorToRestConnector($container, $baseUrl, $mock);
@@ -31,7 +30,7 @@ class RestGetTest extends SilverpopBaseTestClass {
     $result = $connector->restGet($databaseID, 'databases', [
       'eventtypemappings'
     ]);
-    $getRequest = $container[1]['request'];
+    $getRequest = $container[0]['request'];
     $this->assertEquals('https://api-campaign-us-4.goacoustic.com/rest/databases/' . $databaseID . '/eventtypemappings',  (string) $getRequest->getUri());
     $this->assertEquals('SMS - Interacted With a SMS Program', $result['data'][0]['eventType']['name']);
  }
