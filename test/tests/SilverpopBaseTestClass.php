@@ -17,7 +17,7 @@ class SilverpopBaseTestClass extends BaseTestClass {
   /**
    * @var SilverpopXmlConnector
    */
-  protected $silverpop;
+  protected $silverPop;
 
   /**
    * Set up a mock request, specifying the body of the response.

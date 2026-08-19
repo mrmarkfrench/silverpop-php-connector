@@ -150,6 +150,38 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
   }
 
   /**
+   * Acoustic Rest post.
+   *
+   * The url is constructed as for restGet - e.g. to send a mobile originated
+   * message the url is /channels/sms/programs/{programId}/virtualmo, so the
+   * category is 'channels/sms/programs', the identifier is the program id and
+   * the path is ['virtualmo'].
+   *
+   * @param int|string $identifier
+   *   The database ID or other, rest call specific, identifier.
+   * @param string $category
+   * @param array $path
+   * @param array $body
+   *   Values to send as the json body of the request.
+   *
+   * @return array
+   * @throws \GuzzleHttp\Exception\GuzzleException
+   * @throws \SilverpopConnector\SilverpopConnectorException
+   */
+  public function restPost($identifier, string $category, array $path, array $body) {
+    $client = $this->getClient();
+    $response = $client->request('POST',
+      $this->baseUrl . '/rest/' . $category . '/' . $identifier . '/' . implode('/', $path),
+      [
+        'json' => $body,
+        'headers' => ['Accept' => 'application/json'],
+      ]
+    );
+    $content = $response->getBody()->getContents();
+    return json_decode($content, 1);
+  }
+
+  /**
    * GDPR data request.
    *
    * @param $params array containing:
@@ -237,7 +269,7 @@ class SilverpopRestConnector extends SilverpopBaseConnector {
       $filePath = 'php://memory';
       $body = fopen($filePath, 'w+');
       foreach ($params['data'] as $row) {
-        fputcsv($body, $row);
+        fputcsv($body, $row, ',', '"', '\\');
       }
       rewind($body);
     }
